@@ -40,7 +40,7 @@ function are_changes_located_in_lib() {
 echo "input: $INPUT_HEAD_REF $INPUT_BASE_REF"
 git diff --name-only $INPUT_HEAD_REF $INPUT_BASE_REF 
 bin_files=$(git diff --name-only $INPUT_HEAD_REF $INPUT_BASE_REF | grep -P "^bin") 
-if [ -z "$perl_changes" ]; then
+if [ -z "$bin_files" ]; then
 	echo "no perl changes"
 	exit 0
 fi
