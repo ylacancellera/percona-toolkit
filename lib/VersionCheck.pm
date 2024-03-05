@@ -584,7 +584,6 @@ sub get_versions {
 
 sub get_os_version {
    if ( $OSNAME eq 'MSWin32' ) {
-      require Win32;
       return Win32::GetOSDisplayName();
    }
 
