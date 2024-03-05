@@ -5,7 +5,7 @@ for t in bin/*; do
 	util/update-modules $t; 
 	updated_shasum=$(md5sum $t)
 	if [ "$shasum" != "$updated_shasum" ]; then
-		echo "$t changed"
+		echo "$t had unsynced changes from lib, md5sum before and after running './util/update-modules $t' is different"
 		exit 1
 	fi
 done

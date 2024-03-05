@@ -1,9 +1,8 @@
-name: libmoduleshasbeenupdated 
+name: libmodules_has_been_updated 
 
 on:
   pull_request:
     branches: [ "3.x" ]
-
 
 jobs:
 
