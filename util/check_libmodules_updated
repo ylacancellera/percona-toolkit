@@ -11,8 +11,9 @@ function are_changes_located_in_binary_package() {
 	min_changed_line_number=$(git diff -U0 $INPUT_HEAD_REF $INPUT_BASE_REF $file | grep "^@@" | grep -oe "-[0-9]\+,\?" | grep -o "[0-9]\+" | sort -n | head -n 1 )
 	echo "$file, $min_changed_line_number, $pt_package_line_number"	
 	if [ $min_changed_line_number -lt $pt_package_line_number ]; then
-		exit 1
+		return 1
 	fi
+	return 0
 }
 
 function are_changes_located_in_lib() {
@@ -30,24 +31,30 @@ function are_changes_located_in_lib() {
 			fi
 		done
 		if [ $found -eq 0 ]; then
-			exit 1
+			return 1
 		fi
 	done
+	return 0
 }
 
 echo "input: $INPUT_HEAD_REF $INPUT_BASE_REF"
 git diff --name-only $INPUT_HEAD_REF $INPUT_BASE_REF 
-perl_changes=$(git diff --name-only $INPUT_HEAD_REF $INPUT_BASE_REF | grep -P "(bin|lib)") 
+bin_files=$(git diff --name-only $INPUT_HEAD_REF $INPUT_BASE_REF | grep -P "^bin") 
 if [ -z "$perl_changes" ]; then
 	echo "no perl changes"
 	exit 0
 fi
-bin_files=$(echo $perl_changes | grep "^bin")
-lib_files=$(echo $perl_changes | grep "^lib")
+lib_files=$(git diff --name-only $INPUT_HEAD_REF $INPUT_BASE_REF | grep -P "^lib") 
 
 for file in $bin_files; do
 	are_changes_located_in_binary_package
-	are_changes_located_in_lib
+	rc=$?
+	if [[ $rc -eq 1 && -z "$lib_files" ]]; then
+		exit 1
+	fi
+	if [ -n "$lib_files" ]; then
+		are_changes_located_in_lib
+	fi
 
 done
 
