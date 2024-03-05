@@ -21,8 +21,8 @@ function are_changes_located_in_lib() {
 
 	for lib_file in $lib_files; do
 		package=$(grep "^package" $lib_file | cut -d ' ' -f2 | sed -e 's/;//')
-		package_line_number_in_bin=$(grep_line_number "^package $package" $lib_file)
-		end_package_line_number_in_bin=$(grep_line_number "# End $package package" $lib_file)
+		package_line_number_in_bin=$(grep_line_number "^package $package" $file)
+		end_package_line_number_in_bin=$(grep_line_number "# End $package package" $file)
 
 		found=0
 		for line_number in $changed_line_numbers; do
@@ -48,7 +48,7 @@ lib_files=$(git diff --name-only $INPUT_HEAD_REF $INPUT_BASE_REF | grep -P "^lib
 
 for file in $bin_files; do
 	
-	if !are_changes_located_in_binary_package; then
+	if ! are_changes_located_in_binary_package; then
 		if [ -z "$lib_files" ]; then
 			exit 1
 		fi
