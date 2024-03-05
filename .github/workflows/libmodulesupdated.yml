@@ -1,0 +1,17 @@
+name: libmodulescheck 
+
+on:
+  pull_request:
+    branches: [ "3.x" ]
+
+
+jobs:
+
+  libmodulescheck:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+    steps:
+    - uses: actions/checkout@v4
+    - name: run util/check_bin_md5sum
+      run: ./util/check_bin_md5sum
