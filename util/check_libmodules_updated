@@ -44,12 +44,11 @@ if [ -z "$bin_files" ]; then
 	echo "no perl changes"
 	exit 0
 fi
-lib_files=$(git diff --name-only $INPUT_HEAD_REF $INPUT_BASE_REF | grep -P "^lib") 
+lib_files=$(git diff --name-only $INPUT_HEAD_REF $INPUT_BASE_REF | grep -P "^lib" || echo "") 
 
 for file in $bin_files; do
-	are_changes_located_in_binary_package
-	rc=$?
-	if [[ $rc -eq 1 && -z "$lib_files" ]]; then
+	
+	if [[ !are_changes_located_in_binary_package && -z "$lib_files" ]]; then
 		exit 1
 	fi
 	if [ -n "$lib_files" ]; then
