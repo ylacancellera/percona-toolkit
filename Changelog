@@ -1,13 +1,23 @@
 Changelog for Percona Toolkit
 
-v3.5.8 released
+v3.6.0 released CHANGE_ME_2024-04-02
 
 * Feature PR-754: Port improved pt-pmp (Thanks to  Alexey Stroganov for the contribution)
+* Feature PT-1751: adds --where param to pt-online-schema-change
 * Improvement PT-2100: fixed Wide character error (Thanks to Satoshi MITANI for the contribution)
 * Improvement PT-2307: Include last inactive check messages on pt-galera-log-explainer
 * Improvement PR-160:  added support for operf if present, and if CMD_OPCONTROL is not set (Thanks to Fernando Ipar for the contribution)
 * Improvement PR-140:  Add CPU cache configuration info to pt-summary (Thanks to Alexey Kopytov for the contribution)
+* Improvement PR-765:  pt-galera-log-explainer: improvements from feedbacks
+* Improvement PT-2233: pt-k8s-debug-collector needs psql in the host node
+* Improvement PR-772:  pt-galera-log-explainer: add custom regexes parameter
+* Improvement PT-2301: pt-galera-log-explainer: whois redesign
 * Fixed bug PT-2298: pt-galera-log-explainer: superfluous lines on conflicts
+* Fixed bug PT-2295: Fix tests on distributions
+* Fixed bug PT-2275: "System Summary" graph breaks when perl is not available (OS summary dashboard)
+* Fixed bug PT-2284: pt-kill 3.5.5: "Wide character in printf at /usr/bin/pt-kill line 7553."
+* Fixed bug PT-2264: pt-query-digest Pipeline process 11 (--output slowlog) caused an error: Wide character
+* Fixed bug PT-2313: pt-diskstat fails with new kernels again
 
 v3.5.7 released 2023-12-23
 
