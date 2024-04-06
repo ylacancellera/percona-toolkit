@@ -5533,7 +5533,7 @@ is undefined which means an infinite number of iterations.  The tool always
 exits for L<"--run-time">, regardless of the value specified for this option.
 For example, the tool will exit after 1 minute with
 C<--run-time 1m --iterations 4 --interval 30> because 4 iterations at 30
-second intervals would take 2 minutes, longer than the 1 mintue run-time.
+second intervals would take 2 minutes, longer than the 1 minute run-time.
 
 =item --log
 
