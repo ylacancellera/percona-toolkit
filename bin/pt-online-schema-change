@@ -9376,13 +9376,6 @@ sub main {
    my $child_tables;
 
    my $vp = VersionParser->new($cxn->dbh());
-   if (($vp->cmp('8.0.14') >= 0 && $vp->cmp('8.0.17') <= 0) && $vp->flavor() !~ m/maria/i) {
-       my $msg = "There is an error in MySQL that makes the server to die when trying to ".
-                 "rename a table with FKs. See https://bugs.mysql.com/bug.php?id=96145\n".
-                 "Since pt-online-schema change needs to rename the old <-> new tables as the final " .
-                 "step, and the requested table has FKs, it cannot be executed under the current MySQL version";
-       _die($msg, NO_MINIMUM_REQUIREMENTS);
-   }
 
    if ( ($alter_fk_method || '') eq 'none' ) {
       print "Not updating foreign keys because "
@@ -9416,6 +9409,13 @@ sub main {
          # so nothing to do.
       }
       else {
+         if (($vp->cmp('8.0.14') >= 0 && $vp->cmp('8.0.17') <= 0) && $vp->flavor() !~ m/maria/i) {
+            my $msg = "There is an error in MySQL that makes the server to die when trying to ".
+                      "rename a table with FKs. See https://bugs.mysql.com/bug.php?id=96145\n".
+                      "Since pt-online-schema change needs to rename the old <-> new tables as the final " .
+                      "step, and the requested table has FKs, it cannot be executed under the current MySQL version";
+            _die($msg, NO_MINIMUM_REQUIREMENTS);
+         }
          print "Child tables:\n";
          foreach my $child_table ( @$child_tables ) {
             printf "  %s (approx. %s rows)\n",
