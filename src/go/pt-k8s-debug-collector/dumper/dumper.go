@@ -421,15 +421,15 @@ func (d *Dumper) getPodSummary(resource, podName, crName string, namespace strin
 		}
 		ports = port + ":3306"
 		summCmdName = "pt-mysql-summary"
-		summCmdArgs = []string{"--host=127.0.0.1", "--port=" + port, "--user=root", "--password='" + string(pass) + "'"}
-	case "pg","pgv2":
-		var kubeconfig string=""
-		if d.kubeconfig != "" { 
-			kubeconfig=" --kubeconfig=" + d.kubeconfig 
+		summCmdArgs = []string{"--host=127.0.0.1", "--port=" + port, "--user=root", "--password=" + string(pass)}
+	case "pg", "pgv2":
+		var kubeconfig string = ""
+		if d.kubeconfig != "" {
+			kubeconfig = " --kubeconfig=" + d.kubeconfig
 		}
 		summCmdName = "sh"
 		summCmdArgs = []string{"-c", "curl https://raw.githubusercontent.com/percona/support-snippets/master/postgresql/pg_gather/gather.sql 2>/dev/null | " +
-			d.cmd + kubeconfig + " -n "+ namespace + " exec -i "+ podName +" -- psql -X -f - "}
+			d.cmd + kubeconfig + " -n " + namespace + " exec -i " + podName + " -- psql -X -f - "}
 	case "psmdb":
 		var port string
 		if d.forwardport != "" {
@@ -451,7 +451,7 @@ func (d *Dumper) getPodSummary(resource, podName, crName string, namespace strin
 		}
 		ports = port + ":27017"
 		summCmdName = "pt-mongodb-summary"
-		summCmdArgs = []string{"--username='" + user + "'", "--password='" + pass + "'", "--authenticationDatabase=admin", "127.0.0.1:" + port}
+		summCmdArgs = []string{"--username='" + user + "'", "--password=" + pass, "--authenticationDatabase=admin", "127.0.0.1:" + port}
 	}
 
 	cmdPortFwd := exec.Command(d.cmd, "port-forward", "pod/"+podName, ports, "-n", namespace, "--kubeconfig", d.kubeconfig)
