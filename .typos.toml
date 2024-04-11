@@ -33,6 +33,7 @@ extend-ignore-re = [
 ]
 
 [default.extend-identifiers]
+"advices" = "advices" # typo in version_check.go
 "Bootstraping" = "Bootstraping" # typo in Galera lib
 "Continuent" = "Continuent"
 "END_ND_SUMMARY" = "END_ND_SUMMARY"
@@ -61,6 +62,7 @@ extend-ignore-re = [
 "RegexXtrabackupISTReceived" = "RegexXtrabackupISTReceived"
 "START_ND_SUMMARY" = "START_ND_SUMMARY"
 "START_ND_TOOLTIPS" = "START_ND_TOOLTIPS"
+"thr" = "thr" # common abbreviation
 "TOI" = "TOI"
 "UNIONed" = "UNIONed"
 "UNIONs" = "UNIONs"
