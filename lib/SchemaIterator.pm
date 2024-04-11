@@ -495,7 +495,7 @@ sub table_is_allowed {
    # then we'll get d1 tables when the user only wants d2 tables.  So when
    # a table passes allow filters, reaching this point, meaning it is allowed,
    # we make this final to check to see if it's allowed in any database (*)
-   # or allowed in the specific database that the user qualifed the table with.
+   # or allowed in the specific database that the user qualified the table with.
    # The first two checks are to prevent auto-vivifying the filters which will
    # cause bad results (see a similar comment in _make_filters()).
    if ( $filter->{'tables'}
