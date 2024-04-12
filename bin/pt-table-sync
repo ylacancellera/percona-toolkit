@@ -11784,19 +11784,17 @@ sub diff_where {
    my ($lb_sql, $ub_sql);
 
    if ( defined $diff->{lower_boundary} ) {
+      my $i = 0;
+      my @deserialized = $q->deserialize_list($diff->{lower_boundary});
       $lb_sql = $asc->{boundaries}->{'>='};
-      foreach my $val ( $q->deserialize_list($diff->{lower_boundary}) ) {
-         my $quoted_val = $q->quote_val($val);
-         $lb_sql =~ s/\?/$quoted_val/;
-      }
+      $lb_sql =~ s/\?/$q->quote_val($deserialized[$i++])/eg;
    }
 
    if ( defined $diff->{upper_boundary} ) {
+      my $i = 0;
+      my @deserialized = $q->deserialize_list($diff->{upper_boundary});
       $ub_sql = $asc->{boundaries}->{'<='};
-      foreach my $val ( $q->deserialize_list($diff->{upper_boundary}) ) {
-         my $quoted_val = $q->quote_val($val);
-         $ub_sql =~ s/\?/$quoted_val/;
-      }
+      $ub_sql =~ s/\?/$q->quote_val($deserialized[$i++])/eg;
    }
 
    die "Invalid checksum diff: " . Dumper($diff)
