@@ -33,7 +33,6 @@ extend-ignore-re = [
 ]
 
 [default.extend-identifiers]
-"advices" = "advices" # typo in version_check.go
 "Bootstraping" = "Bootstraping" # typo in Galera lib
 "Continuent" = "Continuent"
 "END_ND_SUMMARY" = "END_ND_SUMMARY"
