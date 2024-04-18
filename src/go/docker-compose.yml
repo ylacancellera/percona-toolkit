@@ -186,7 +186,7 @@ services:
         image: ${TEST_MONGODB_IMAGE:-mongo:4.2}
         ports:
             - "${TEST_MONGODB_STANDALONE_PORT:-27017}:27017"
-        command: mongod --replSet rs1 --shardsvr --port 27017  --oplogSize 16
+        command: mongod --port 27017  --oplogSize 16
     postgres9:
         image: ${POSTGRE_IMAGE:-postgres:9.6}
         container_name: go_postgres9_1
