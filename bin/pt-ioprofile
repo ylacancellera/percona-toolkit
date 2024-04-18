@@ -408,7 +408,7 @@ _parse_command_line() {
          fi
 
          if $(echo $opt | grep '^[a-z-][a-z-]*=' >/dev/null 2>&1); then
-            val="$(echo $opt | awk -F= '{print $2}')"
+            val="$(echo "$opt" | awk '{ st = index($0,"="); print substr($0, st+1)}')"
             opt="$(echo $opt | awk -F= '{print $1}')"
          fi
 
@@ -453,7 +453,7 @@ _parse_command_line() {
             val=$(size_to_bytes $val)
          fi
 
-         eval "OPT_$opt"="'$val'"
+         eval "OPT_$opt"='$val'
 
          opt=""
          val=""
