@@ -475,7 +475,7 @@ _parse_command_line() {
 
          # Split opt=val pair.
          if $(echo $opt | grep '^[a-z-][a-z-]*=' >/dev/null 2>&1); then
-            val="$(echo $opt | awk -F= '{print $2}')"
+            val="$(echo "$opt" | awk '{ st = index($0,"="); print substr($0, st+1)}')"
             opt="$(echo $opt | awk -F= '{print $1}')"
          fi
 
@@ -533,7 +533,7 @@ _parse_command_line() {
          fi
 
          # Re-eval the option to update its global variable value.
-         eval "OPT_$opt"="'$val'"
+         eval "OPT_$opt"='$val'
 
          opt=""
          val=""

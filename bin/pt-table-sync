@@ -6812,7 +6812,8 @@ sub recurse_to_slaves {
    my $slave_dsn = $dsn;
    if ($slave_user) {
       $slave_dsn->{u} = $slave_user;
-      PTDEBUG && _d("Using slave user $slave_user on ".$slave_dsn->{h}.":".$slave_dsn->{P});
+      PTDEBUG && _d("Using slave user $slave_user on "
+         . $slave_dsn->{h} . ":" . ( $slave_dsn->{P} ? $slave_dsn->{P} : ""));
    }
    if ($slave_password) {
       $slave_dsn->{p} = $slave_password;
@@ -10230,7 +10231,17 @@ sub main {
       unshift @dsns, $master;  # dsn[0]=master, dsn[1]=slave
       $dsns[0]->{dbh} = get_cxn($dsns[0], %modules);
       if ( $o->get('check-master') ) {
-         $ms->is_master_of($dsns[0]->{dbh}, $dsns[1]->{dbh});
+         my $is_master_of = eval {
+            $ms->is_master_of($dsns[0]->{dbh}, $dsns[1]->{dbh});
+         };
+
+         # We should not die if replica connected via tunnel or port redirection
+         if ( $EVAL_ERROR ) {
+            $EVAL_ERROR =~ m/The slave is connected to (\d+) but the master's port is \d+/;
+            if ( !$1 || $1 != $dsns[0]->{P} ) {
+               die $EVAL_ERROR;
+            }
+         }
       }
    }
 

@@ -451,7 +451,7 @@ func (d *Dumper) getPodSummary(resource, podName, crName string, namespace strin
 		}
 		ports = port + ":27017"
 		summCmdName = "pt-mongodb-summary"
-		summCmdArgs = []string{"--username='" + user + "'", "--password=" + pass, "--authenticationDatabase=admin", "127.0.0.1:" + port}
+		summCmdArgs = []string{"--username=" + user, "--password=" + string(pass), "--authenticationDatabase=admin", "127.0.0.1:" + port}
 	}
 
 	cmdPortFwd := exec.Command(d.cmd, "port-forward", "pod/"+podName, ports, "-n", namespace, "--kubeconfig", d.kubeconfig)

@@ -374,14 +374,14 @@ func getHostInfo(ctx context.Context, client *mongo.Client) (*hostInfo, error) {
 	}
 
 	cmdOpts := proto.CommandLineOptions{}
-	query := primitive.D{{Key: "getCmdLineOpts", Value: 1}, {Key: "recordStats", Value: 1}}
+	query := primitive.D{{Key: "getCmdLineOpts", Value: 1}}
 	err := client.Database("admin").RunCommand(ctx, query).Decode(&cmdOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot get command line options")
 	}
 
 	ss := proto.ServerStatus{}
-	query = primitive.D{{Key: "serverStatus", Value: 1}, {Key: "recordStats", Value: 1}}
+	query = primitive.D{{Key: "serverStatus", Value: 1}}
 	if err := client.Database("admin").RunCommand(ctx, query).Decode(&ss); err != nil {
 		return nil, errors.Wrap(err, "GetHostInfo.serverStatus")
 	}
@@ -528,7 +528,6 @@ func getSecuritySettings(ctx context.Context, client *mongo.Client, ver string) 
 	cmdOpts := proto.CommandLineOptions{}
 	err = client.Database("admin").RunCommand(ctx, primitive.D{
 		{Key: "getCmdLineOpts", Value: 1},
-		{Key: "recordStats", Value: 1},
 	}).Decode(&cmdOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot get command line options")
@@ -633,7 +632,6 @@ func getOpCountersStats(ctx context.Context, client *mongo.Client, count int,
 
 		err := client.Database("admin").RunCommand(ctx, primitive.D{
 			{Key: "serverStatus", Value: 1},
-			{Key: "recordStats", Value: 1},
 		}).Decode(&ss)
 		if err != nil {
 			return nil, err
