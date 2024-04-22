@@ -443,7 +443,7 @@ func (d *Dumper) getPodSummary(resource, podName, crName string, namespace strin
 		}
 		user, err := d.getDataFromSecret(cr.Spec.Secrets.Users, "MONGODB_DATABASE_ADMIN_USER", namespace)
 		if err != nil {
-			return nil, errors.Wrap(err, "get password from psmdb users secret")
+			return nil, errors.Wrap(err, "get user name from psmdb users secret")
 		}
 		pass, err := d.getDataFromSecret(cr.Spec.Secrets.Users, "MONGODB_DATABASE_ADMIN_PASSWORD", namespace)
 		if err != nil {
