@@ -1,6 +1,7 @@
 module github.com/percona/percona-toolkit
 
 go 1.21
+toolchain go1.22.2
 
 require (
 	github.com/AlekSi/pointer v1.2.0
@@ -31,14 +32,14 @@ require (
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.29.3
+	k8s.io/api v0.30.0
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 )
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
-	github.com/go-logr/logr v1.3.0 // indirect
+	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
@@ -64,8 +65,8 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apimachinery v0.29.3 // indirect
-	k8s.io/klog/v2 v2.110.1 // indirect
+	k8s.io/apimachinery v0.30.0 // indirect
+	k8s.io/klog/v2 v2.120.1 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
