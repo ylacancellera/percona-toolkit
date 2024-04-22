@@ -423,7 +423,7 @@ func (d *Dumper) getPodSummary(resource, podName, crName string, namespace strin
 		summCmdName = "pt-mysql-summary"
 		summCmdArgs = []string{"--host=127.0.0.1", "--port=" + port, "--user=root", "--password=" + string(pass)}
 	case "pg", "pgv2":
-		var kubeconfig string = ""
+		var kubeconfig string
 		if d.kubeconfig != "" {
 			kubeconfig = " --kubeconfig=" + d.kubeconfig
 		}
