@@ -2006,11 +2006,18 @@ sub main {
    # Roles can be identified because the user password is expired, the authentication
    # string is empty and the account is locked
    my $mysql8_where = '';
-   if ($version !~ "-MariaDB" && VersionCompare::cmp($version, '8.0.0') >= 0) {
+   if ( $version !~ "-MariaDB" && VersionCompare::cmp($version, '8.0.0') >= 0 ) {
        $mysql8_where = ' WHERE NOT ( `account_locked`="Y" AND ' .
                                       ' `password_expired`="Y" AND ' .
                                       ' `authentication_string`="" ) ';
    }
+
+   # PT-2190. Starting from 8.0.17 we will set print_identified_with_as_hex
+   # before getting users
+   if ( $version !~ "-MariaDB" && VersionCompare::cmp($version, '8.0.17') >= 0 ) {
+      $dbh->do('SET print_identified_with_as_hex = 1');
+   }
+
    my $users = $o->get('only') || $dbh->selectall_arrayref(
       "SELECT DISTINCT User, Host FROM mysql.user $mysql8_where ORDER BY User, Host",
       { Slice => {} });
