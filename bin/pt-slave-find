@@ -2030,7 +2030,7 @@ sub get_dbh {
                . "DBD::mysql is not installed, try:\n"
                . "  Debian/Ubuntu  apt-get install libdbd-mysql-perl\n"
                . "  RHEL/CentOS    yum install perl-DBD-MySQL\n"
-               . "  OpenSolaris    pgk install pkg:/SUNWapu13dbd-mysql\n";
+               . "  OpenSolaris    pkg install pkg:/SUNWapu13dbd-mysql\n";
          }
          elsif ( $EVAL_ERROR =~ m/not a compiled character set|character set utf8/ ) {
             PTDEBUG && _d('Going to try again without utf8 support');
