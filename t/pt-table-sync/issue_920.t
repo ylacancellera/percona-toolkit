@@ -19,7 +19,7 @@ my $dp = new DSNParser(opts=>$dsn_opts);
 my $sb = new Sandbox(basedir => '/tmp', DSNParser => $dp);
 my $dbh = $sb->get_dbh_for('master');
 
-plan skip_all => 'Pending solution';
+plan skip_all => 'Pending solution: waiting for the PT-2338 fix';
 
 if ( !$dbh ) {
    plan skip_all => 'Cannot connect to sandbox master';
@@ -63,6 +63,8 @@ is_deeply(
    [[1,100],[2,200]],
    'Flipped 2nd table'
 );
+diag(`/tmp/12345/use -e "select * from issue_920.PK_UK_test order by id"`);
+diag(`/tmp/12345/use -e "select * from issue_920.PK_UK_test_2 order by id"`);
 
 # #############################################################################
 # Done.

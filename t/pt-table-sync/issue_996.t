@@ -26,6 +26,9 @@ if ( !$master_dbh ) {
 elsif ( !$slave_dbh ) {
    plan skip_all => 'Cannot connect to sandbox slave';
 }
+elsif ( $sandbox_version ge '8.0' ) {
+   plan skip_all => 'Test fails due to https://bugs.mysql.com/bug.php?id=115017';
+}
 else {
    plan tests => 3;
 }
@@ -36,7 +39,7 @@ my @args = ('--sync-to-master', 'h=127.1,P=12346,u=msandbox,p=msandbox',
 my $pt_table_checksum = "$trunk/bin/pt-table-checksum h=127.1,P=12345,u=msandbox,p=msandbox -d issue_375 --chunk-size 20 --chunk-size-limit 0 --set-vars innodb_lock_wait_timeout=3";
 
 # #############################################################################
-# Issue 996: might not chunk inside of mk-table-checksum's boundaries
+# Issue 996: might not chunk inside of pt-table-checksum's boundaries
 # #############################################################################
 
 # Re-using this table for this issue.  It has 100 pk rows.
@@ -64,7 +67,7 @@ wait_until(
    0.5, 10,
 );
 
-# mk-table-checksum the table with 5 chunks of 20 rows.
+# pt-table-checksum the table with 5 chunks of 20 rows.
 $output = `$pt_table_checksum --replicate issue_375.checksums`;
 is(
    PerconaTest::count_checksum_results($output, 'diffs'),
@@ -72,13 +75,18 @@ is(
    "Chunk checksum diff"
 );
 
-# Run mk-table-sync with the replicate table.  Chunk size here is relative
-# to the mk-table-checksum ranges.  So we sub-chunk the 20 row ranges into
+diag(`/tmp/12346/use -e "analyze table issue_375.t"`);
+diag(`/tmp/12345/use -e "EXPLAIN SELECT * FROM issue_375.t FORCE INDEX (PRIMARY) WHERE ((id >= '21')) AND ((id <= '40'))"`);
+diag(`/tmp/12345/use -e "SELECT * FROM issue_375.t FORCE INDEX (PRIMARY) WHERE ((id >= '21')) AND ((id <= '40'))"`);
+diag(`/tmp/12345/use -e "EXPLAIN ANALYZE SELECT * FROM issue_375.t FORCE INDEX (PRIMARY) WHERE ((id >= '21')) AND ((id <= '40'))"`);
+# Run pt-table-sync with the replicate table.  Chunk size here is relative
+# to the pt-table-checksum ranges.  So we sub-chunk the 20 row ranges into
 # 4 5-row sub-chunks.
 my $file = "/tmp/mts-output.txt";
 output(
    sub { pt_table_sync::main(@args, qw(--chunk-size 5 -v -v)) },
    file => $file,
+   stderr => 1,
 );
 
 # The output shows that the 20-row range was chunked into 4 5-row sub-chunks.
@@ -98,6 +106,7 @@ is(
 ",
    "Chunks within chunk"
 );
+diag(`cat $file`);
 
 diag(`rm -rf $file >/dev/null`);
 
