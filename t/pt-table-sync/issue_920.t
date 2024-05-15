@@ -63,8 +63,6 @@ is_deeply(
    [[1,100],[2,200]],
    'Flipped 2nd table'
 );
-diag(`/tmp/12345/use -e "select * from issue_920.PK_UK_test order by id"`);
-diag(`/tmp/12345/use -e "select * from issue_920.PK_UK_test_2 order by id"`);
 
 # #############################################################################
 # Done.
