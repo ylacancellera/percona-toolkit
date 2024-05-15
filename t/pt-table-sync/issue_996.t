@@ -75,10 +75,6 @@ is(
    "Chunk checksum diff"
 );
 
-diag(`/tmp/12346/use -e "analyze table issue_375.t"`);
-diag(`/tmp/12345/use -e "EXPLAIN SELECT * FROM issue_375.t FORCE INDEX (PRIMARY) WHERE ((id >= '21')) AND ((id <= '40'))"`);
-diag(`/tmp/12345/use -e "SELECT * FROM issue_375.t FORCE INDEX (PRIMARY) WHERE ((id >= '21')) AND ((id <= '40'))"`);
-diag(`/tmp/12345/use -e "EXPLAIN ANALYZE SELECT * FROM issue_375.t FORCE INDEX (PRIMARY) WHERE ((id >= '21')) AND ((id <= '40'))"`);
 # Run pt-table-sync with the replicate table.  Chunk size here is relative
 # to the pt-table-checksum ranges.  So we sub-chunk the 20 row ranges into
 # 4 5-row sub-chunks.
@@ -106,7 +102,6 @@ is(
 ",
    "Chunks within chunk"
 );
-diag(`cat $file`);
 
 diag(`rm -rf $file >/dev/null`);
 
