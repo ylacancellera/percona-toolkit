@@ -74,7 +74,7 @@ func New(location, namespace, resource string, kubeconfig string, forwardport st
 		"persistentvolumes",
 	}
 
-	switch resource {
+	switch resourceType(resource) {
 	case "auto":
 		result, err := d.runCmd("api-resources", "-o", "name")
 		if err != nil {
@@ -124,7 +124,7 @@ func New(location, namespace, resource string, kubeconfig string, forwardport st
 	}
 	sslSecrets := make([]sslSecret, 0)
 	filePaths := make([]string, 0)
-	switch resource {
+	switch resourceType(resource) {
 	case "pg":
 		sslSecrets = append(sslSecrets,
 			sslSecret{
@@ -652,7 +652,9 @@ func (d *Dumper) getSSLCertificates(secret sslSecret, namespace string, tw *tar.
 }
 
 func resourceType(s string) string {
-	if s == "pxc" || strings.HasPrefix(s, "pxc/") {
+	if s == "auto" {
+		return "auto"
+	} else if s == "pxc" || strings.HasPrefix(s, "pxc/") {
 		return "pxc"
 	} else if s == "psmdb" || strings.HasPrefix(s, "psmdb/") {
 		return "psmdb"
