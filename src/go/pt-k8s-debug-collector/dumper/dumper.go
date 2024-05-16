@@ -42,7 +42,7 @@ type Dumper struct {
 	sslSecrets    []sslSecret
 }
 
-var resourcesRe = regexp.MustCompile(`(\w+)\.(\w+).percona\.com`)
+var resourcesRe = regexp.MustCompile(`(\w+\.(\w+).percona\.com)`)
 
 // New return new Dumper object
 func New(location, namespace, resource string, kubeconfig string, forwardport string) Dumper {
@@ -91,35 +91,35 @@ func New(location, namespace, resource string, kubeconfig string, forwardport st
 		}
 	case "pg":
 		resources = append(resources,
-			"perconapgclusters",
-			"pgclusters",
-			"pgpolicies",
-			"pgreplicas",
-			"pgtasks",
+			"perconapgclusters.pg.percona.com",
+			"pgclusters.pg.percona.com",
+			"pgpolicies.pg.percona.com",
+			"pgreplicas.pg.percona.com",
+			"pgtasks.pg.percona.com",
 		)
 	case "pgv2":
 		resources = append(resources,
-			"perconapgbackups",
-			"perconapgclusters",
-			"perconapgrestores",
+			".perconapgbackups.pgv2.percona.com",
+			"perconapgclusters.pgv2.percona.com",
+			"perconapgrestores.pgv2.percona.com",
 		)
 	case "pxc":
 		resources = append(resources,
-			"perconaxtradbclusterbackups",
-			"perconaxtradbclusterrestores",
-			"perconaxtradbclusters",
+			"perconaxtradbclusterbackups.pxc.percona.com",
+			"perconaxtradbclusterrestores.pxc.percona.com",
+			"perconaxtradbclusters.pxc.percona.com",
 		)
 	case "ps":
 		resources = append(resources,
-			"perconaservermysqlbackups",
-			"perconaservermysqlrestores",
-			"perconaservermysqls",
+			"perconaservermysqlbackups.ps.percona.com",
+			"perconaservermysqlrestores.ps.percona.com",
+			"perconaservermysqls.ps.percona.com",
 		)
 	case "psmdb":
 		resources = append(resources,
-			"perconaservermongodbbackups",
-			"perconaservermongodbrestores",
-			"perconaservermongodbs",
+			"perconaservermongodbbackups.psmdb.percona.com",
+			"perconaservermongodbrestores.psmdb.percona.com",
+			"perconaservermongodbs.psmdb.percona.com",
 		)
 	}
 	sslSecrets := make([]sslSecret, 0)
@@ -129,22 +129,22 @@ func New(location, namespace, resource string, kubeconfig string, forwardport st
 		sslSecrets = append(sslSecrets,
 			sslSecret{
 				secret:    "{{ .Name }}-ssl-ca",
-				resource:  "perconapgclusters",
+				resource:  "perconapgclusters.pg.percona.com",
 				dataNames: []string{"ca.crt"},
 			},
 			sslSecret{
 				secret:    "{{ .Name }}-ssl-keypair",
-				resource:  "perconapgclusters",
+				resource:  "perconapgclusters.pg.percona.com",
 				dataNames: []string{"tls.crt"},
 			},
 			sslSecret{
 				secret:    "{{ .Name }}-replication-ssl-keypair",
-				resource:  "perconapgclusters",
+				resource:  "perconapgclusters.pg.percona.com",
 				dataNames: []string{"tls.crt"},
 			},
 			sslSecret{
 				secret:    "pgo.tls",
-				resource:  "perconapgclusters",
+				resource:  "perconapgclusters.pg.percona.com",
 				dataNames: []string{"tls.crt"},
 			},
 		)
