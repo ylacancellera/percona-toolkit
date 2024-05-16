@@ -276,12 +276,16 @@ func TestSSLResourceOption(t *testing.T) {
 			cmds: [][]string{
 				{"tar", "--to-command", "grep -m 1 -o ca.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*ssl-ca"},
 				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*ssl-ca"},
+				{"tar", "--to-command", "grep -m 1 -o tls.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl-keypair"},
+				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl-keypair"},
 				{"tar", "--to-command", "grep -m 1 -o tls.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/pgo.tls"},
 				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/pgo.tls"},
 			},
 			want: []string{
 				"ca.crt",
 				"Certificate",
+				"tls.crt\ntls.crt",
+				"Certificate\nCertificate",
 				"tls.crt",
 				"Certificate",
 			},

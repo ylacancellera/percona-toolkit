@@ -6,13 +6,13 @@ import (
 	"compress/gzip"
 	"encoding/base64"
 	"encoding/json"
-	"html/template"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/pkg/errors"
@@ -131,6 +131,16 @@ func New(location, namespace, resource string, kubeconfig string, forwardport st
 				secret:    "{{ .Name }}-ssl-ca",
 				resource:  "perconapgclusters",
 				dataNames: []string{"ca.crt"},
+			},
+			sslSecret{
+				secret:    "{{ .Name }}-ssl-keypair",
+				resource:  "perconapgclusters",
+				dataNames: []string{"tls.crt"},
+			},
+			sslSecret{
+				secret:    "{{ .Name }}-replication-ssl-keypair",
+				resource:  "perconapgclusters",
+				dataNames: []string{"tls.crt"},
 			},
 			sslSecret{
 				secret:    "pgo.tls",
