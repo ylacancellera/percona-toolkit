@@ -45,6 +45,27 @@ ok(
    ),
    'Analysis for slow007 with --explain, no rows',
 );
+
+# output=json
+
+SKIP: {
+   skip "output=json tests require 5.7" unless $sandbox_version ge '5.7';
+   my $jq = `which jq`;
+   chomp $jq;
+   skip "output=json tests require jq" unless -x "$jq";
+
+   ok(
+      no_diff(
+         sub { pt_query_digest::main(@args, '--output=json',
+            "$trunk/t/lib/samples/slowlogs/slow007.txt") },
+         ( $sandbox_version ge '8.0' ? "t/pt-query-digest/samples/slow007_explain_json_1-80.txt"
+         : "t/pt-query-digest/samples/slow007_explain_json_1-57.txt"),
+         post_pipe => 'jq -S .',
+      ),
+      'Analysis for slow007 with --explain and --output=json, no rows',
+   );
+}
+
 # Normalish output from EXPLAIN.
 $dbh->do("insert into trees values ('apple'),('orange'),('banana')");
 
@@ -59,6 +80,26 @@ ok(
    ),
    'Analysis for slow007 with --explain',
 );
+
+# output=json
+
+SKIP: {
+   skip "output=json tests require 5.7" unless $sandbox_version ge '5.7';
+   my $jq = `which jq`;
+   chomp $jq;
+   skip "output=json tests require jq" unless -x "$jq";
+
+   ok(
+      no_diff(
+         sub { pt_query_digest::main(@args, '--output=json',
+            "$trunk/t/lib/samples/slowlogs/slow007.txt") },
+         ( $sandbox_version ge '8.0' ? "t/pt-query-digest/samples/slow007_explain_json_2-80.txt"
+         : "t/pt-query-digest/samples/slow007_explain_json_2-57.txt"),
+         post_pipe => 'jq -S .',
+      ),
+      'Analysis for slow007 with --explain and --output=json',
+   );
+}
 
 # #############################################################################
 # Issue 1141: Add "spark charts" to mk-query-digest profile
@@ -104,9 +145,11 @@ ok(
        : $sandbox_version ge '5.6' ? "t/pt-query-digest/samples/issue_1196-output-5.6.txt"
        : $sandbox_version ge '5.1' ? "t/pt-query-digest/samples/issue_1196-output.txt"
        :                             "t/pt-query-digest/samples/issue_1196-output-5.0.txt"),
+      keep_output => 1,
    ),
    "--explain sparkline uses event db and doesn't crash ea (issue 1196)"
-);
+) or diag(`cat /tmp/percona-toolkit-test-output.txt`);
+diag(`rm /tmp/percona-toolkit-test-output.txt`);
 
 # #############################################################################
 # Done.

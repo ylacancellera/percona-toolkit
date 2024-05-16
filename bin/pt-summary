@@ -74,6 +74,7 @@ _d () {
 
 
 
+
 set -u
 
 ARGV=""           # Non-option args (probably input files)
@@ -102,6 +103,11 @@ usage_or_errors() {
    if [ "$OPT_VERSION" ]; then
       version=$(grep '^pt-[^ ]\+ [0-9]' "$file")
       echo "$version"
+      return 1
+   fi
+
+   if [ -z $(_which perl) ]; then
+      echo "Perl binary required to run this tool"
       return 1
    fi
 
@@ -411,7 +417,7 @@ _parse_command_line() {
          fi
 
          if $(echo $opt | grep '^[a-z-][a-z-]*=' >/dev/null 2>&1); then
-            val="$(echo $opt | awk -F= '{print $2}')"
+            val="$(echo "$opt" | awk '{ st = index($0,"="); print substr($0, st+1)}')"
             opt="$(echo $opt | awk -F= '{print $1}')"
          fi
 
@@ -456,7 +462,7 @@ _parse_command_line() {
             val=$(size_to_bytes $val)
          fi
 
-         eval "OPT_$opt"="'$val'"
+         eval "OPT_$opt"='$val'
 
          opt=""
          val=""
@@ -1545,6 +1551,24 @@ parse_dmidecode_mem_devices () { local PTFUNCNAME=parse_dmidecode_mem_devices;
        | awk -F'|' '{printf("  %-9s %-8s %-17s %-13s %-13s %-8s\n", $4, $2, $7, $3, $5, $6);}'
 }
 
+parse_dmidecode_cache_info () { local PTFUNCNAME=parse_dmidecode_cache_info;
+   local file="$1"
+
+   [ -e "$file" ] || return
+
+   echo "  Designation               Configuration                  Size     Associativity"
+   echo "  ========================= ============================== ======== ======================"
+   sed    -e '/./{H;$!d;}' \
+          -e 'x;/Cache Information\n/!d;' \
+          -e 's/: /:/g' \
+          -e 's/</{/g' \
+          -e 's/>/}/g' \
+          -e 's/[ \t]*\n/\n/g' \
+       "${file}" \
+       | awk -F: '/Socket Designation|Configuration|Installed Size/{printf("|%s", $2)}/^[\t ]+Associativity/{print "|" $2}' \
+       | awk -F'|' '{printf("  %-25s %-30s %-8s %-22s\n", $2, $3, $4, $5);}'
+}
+
 parse_numactl () { local PTFUNCNAME=parse_numactl;
    local file="$1"
 
@@ -2083,6 +2107,10 @@ section_Processor () {
       parse_sysctl_cpu_openbsd "$data_dir/sysctl"
    elif [ "${platform}" = "SunOS" ]; then
       parse_psrinfo_cpus "$data_dir/psrinfo_minus_v"
+   fi
+
+   if [ -s "$data_dir/dmidecode" ]; then
+      parse_dmidecode_cache_info "$data_dir/dmidecode"
    fi
 }
 
@@ -2761,7 +2789,7 @@ software from Percona.
 
 =head1 COPYRIGHT, LICENSE, AND WARRANTY
 
-This program is copyright 2011-2021 Percona LLC and/or its affiliates,
+This program is copyright 2011-2024 Percona LLC and/or its affiliates,
 2010-2011 Baron Schwartz.
 
 THIS PROGRAM IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
@@ -2780,7 +2808,7 @@ Place, Suite 330, Boston, MA  02111-1307  USA.
 
 =head1 VERSION
 
-pt-summary 3.5.4
+pt-summary 3.5.7
 
 =cut
 

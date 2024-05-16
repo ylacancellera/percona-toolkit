@@ -64,7 +64,7 @@ BEGIN {
 {
 package Percona::Toolkit;
 
-our $VERSION = '3.5.4';
+our $VERSION = '3.5.7';
 
 use strict;
 use warnings FATAL => 'all';
@@ -1008,7 +1008,7 @@ sub get_dbh {
                . "DBD::mysql is not installed, try:\n"
                . "  Debian/Ubuntu  apt-get install libdbd-mysql-perl\n"
                . "  RHEL/CentOS    yum install perl-DBD-MySQL\n"
-               . "  OpenSolaris    pgk install pkg:/SUNWapu13dbd-mysql\n";
+               . "  OpenSolaris    pkg install pkg:/SUNWapu13dbd-mysql\n";
          }
          elsif ( $EVAL_ERROR =~ m/not a compiled character set|character set utf8/ ) {
             PTDEBUG && _d('Going to try again without utf8 support');
@@ -1023,21 +1023,48 @@ sub get_dbh {
    if ( $cxn_string =~ m/mysql/i ) {
       my $sql;
 
-      if ( my ($charset) = $cxn_string =~ m/charset=([\w]+)/ ) {
+      my ($charset) = $cxn_string =~ m/charset=([\w]+)/;
+      if ( $charset ) {
          $sql = qq{/*!40101 SET NAMES "$charset"*/};
          PTDEBUG && _d($dbh, $sql);
          eval { $dbh->do($sql) };
          if ( $EVAL_ERROR ) {
             die "Error setting NAMES to $charset: $EVAL_ERROR";
          }
-         PTDEBUG && _d('Enabling charset for STDOUT');
-         if ( $charset eq 'utf8' ) {
-            binmode(STDOUT, ':utf8')
-               or die "Can't binmode(STDOUT, ':utf8'): $OS_ERROR";
+      }
+      else {
+         my ($mysql_version) = eval { $dbh->selectrow_array('SELECT VERSION()') };
+         if ( $EVAL_ERROR ) {
+            die "Cannot get MySQL version: $EVAL_ERROR";
          }
-         else {
-            binmode(STDOUT) or die "Can't binmode(STDOUT): $OS_ERROR";
+         my (undef, $character_set_server) = eval { $dbh->selectrow_array("SHOW VARIABLES LIKE 'character_set_server'") };
+         if ( $EVAL_ERROR ) {
+            die "Cannot get MySQL var character_set_server: $EVAL_ERROR";
          }
+
+         if ( $mysql_version =~ m/^(\d+)\.(\d)\.(\d+).*/ ) {
+            if ( $1 >= 8 && $character_set_server =~ m/^utf8/ ) {
+               $dbh->{mysql_enable_utf8} = 1;
+               $charset = $character_set_server;
+               my $msg = "MySQL version $mysql_version >= 8 and character_set_server = $character_set_server\n".
+                        "Setting: SET NAMES $character_set_server";
+               PTDEBUG && _d($msg);
+               eval { $dbh->do("SET NAMES '$character_set_server'") };
+               if ( $EVAL_ERROR ) {
+                  die "Cannot SET NAMES $character_set_server: $EVAL_ERROR";
+               }
+            }
+         }
+      }
+      PTDEBUG && _d('Enabling charset for STDOUT');
+      if ( $charset && $charset =~ m/^utf8/ ) {
+         binmode(STDOUT, ':utf8')
+            or die "Can't binmode(STDOUT, ':utf8'): $OS_ERROR";
+         binmode(STDERR, ':utf8')
+            or die "Can't binmode(STDERR, ':utf8'): $OS_ERROR";
+      }
+      else {
+         binmode(STDOUT) or die "Can't binmode(STDOUT): $OS_ERROR";
       }
 
       if ( my $vars = $self->prop('set-vars') ) {
@@ -1062,28 +1089,6 @@ sub get_dbh {
            . ($sql_mode ? " and $sql_mode" : '')
            . ": $EVAL_ERROR";
       }
-   }
-   my ($mysql_version) = eval { $dbh->selectrow_array('SELECT VERSION()') };
-   if ($EVAL_ERROR) {
-       die "Cannot get MySQL version: $EVAL_ERROR";
-   }
-
-   my (undef, $character_set_server) = eval { $dbh->selectrow_array("SHOW VARIABLES LIKE 'character_set_server'") };
-   if ($EVAL_ERROR) {
-       die "Cannot get MySQL var character_set_server: $EVAL_ERROR";
-   }
-
-   if ($mysql_version =~ m/^(\d+)\.(\d)\.(\d+).*/) {
-       if ($1 >= 8 && $character_set_server =~ m/^utf8/) {
-           $dbh->{mysql_enable_utf8} = 1;
-           my $msg = "MySQL version $mysql_version >= 8 and character_set_server = $character_set_server\n".
-                     "Setting: SET NAMES $character_set_server";
-           PTDEBUG && _d($msg);
-           eval { $dbh->do("SET NAMES 'utf8mb4'") };
-           if ($EVAL_ERROR) {
-               die "Cannot SET NAMES $character_set_server: $EVAL_ERROR";
-           }
-       }
    }
 
    PTDEBUG && _d('DBH info: ',
@@ -8067,6 +8072,7 @@ override query_report => sub {
                       :                             undef;
       my $fingerprint = substr($item, 0, $self->max_fingerprint_length);
       my $checksum    = make_checksum($item);
+      my $explain     = $self->explain_report($sample->{arg}, $sample->{db});
       my $class       = {
          checksum    => $checksum,
          fingerprint => $fingerprint,
@@ -8078,6 +8084,8 @@ override query_report => sub {
                query      => substr($sample->{arg}, 0, $self->max_query_length),
                ts         => $sample->{ts} ? parse_timestamp($sample->{ts}) : undef,
                Query_time => $sample->{Query_time},
+               $explain ?
+                  ( explain  => $explain ): (),
             },
          ),
       };
@@ -9039,10 +9047,28 @@ sub check_table {
    }
    my ($dbh, $db, $tbl) = @args{@required_args};
    my $q      = $self->{Quoter} || 'Quoter';
+   $self->{check_table_error} = undef;
+
+
+   my $lctn_sql = 'SELECT @@lower_case_table_names';
+   PTDEBUG && _d($lctn_sql);
+
+   my $lower_case_table_names;
+   eval { ($lower_case_table_names) = $dbh->selectrow_array($lctn_sql); };
+   if ( $EVAL_ERROR ) {
+      PTDEBUG && _d($EVAL_ERROR);
+      $self->{check_table_error} = $EVAL_ERROR;
+      return 0;
+   }
+
+   PTDEBUG && _d("lower_case_table_names=$lower_case_table_names");
+   if ($lower_case_table_names > 0) {
+       PTDEBUG && _d("MySQL uses case-insensitive lookup, converting '$tbl' to lowercase");
+       $tbl = lc $tbl;
+   }
+
    my $db_tbl = $q->quote($db, $tbl);
    PTDEBUG && _d('Checking', $db_tbl);
-
-   $self->{check_table_error} = undef;
 
    my $sql = "SHOW TABLES FROM " . $q->quote($db)
            . ' LIKE ' . $q->literal_like($tbl);
@@ -9487,6 +9513,7 @@ sub new {
       force_log_file => $args{force_log_file},
       parent_exit    => $args{parent_exit},
       pid_file_owner => 0,
+      utf8           => $args{utf8} // 0,
    };
    return bless $self, $class;
 }
@@ -9499,6 +9526,7 @@ sub run {
    my $log_file       = $self->{log_file};
    my $force_log_file = $self->{force_log_file};
    my $parent_exit    = $self->{parent_exit};
+   my $utf8           = $self->{utf8};
 
    PTDEBUG && _d('Starting daemon');
 
@@ -9545,10 +9573,19 @@ sub run {
          close STDOUT;
          open  STDOUT, '>>', $log_file
             or die "Cannot open log file $log_file: $OS_ERROR";
+         if ( $utf8 ) {
+            binmode(STDOUT, ':utf8')
+               or die "Can't binmode(STDOUT, ':utf8'): $OS_ERROR";
+         }
+
 
          close STDERR;
          open  STDERR, ">&STDOUT"
             or die "Cannot dupe STDERR to STDOUT: $OS_ERROR";
+         if ( $utf8 ) {
+            binmode(STDERR, ':utf8')
+               or die "Can't binmode(STDERR, ':utf8'): $OS_ERROR";
+         }
       }
       else {
          if ( -t STDOUT ) {
@@ -10615,7 +10652,8 @@ sub recurse_to_slaves {
    my $slave_dsn = $dsn;
    if ($slave_user) {
       $slave_dsn->{u} = $slave_user;
-      PTDEBUG && _d("Using slave user $slave_user on ".$slave_dsn->{h}.":".$slave_dsn->{P});
+      PTDEBUG && _d("Using slave user $slave_user on "
+         . $slave_dsn->{h} . ":" . ( $slave_dsn->{P} ? $slave_dsn->{P} : ""));
    }
    if ($slave_password) {
       $slave_dsn->{p} = $slave_password;
@@ -10669,7 +10707,7 @@ sub recurse_to_slaves {
             die $EVAL_ERROR;
          }
       }
-   } until ($id);
+   } until (defined $id);
    PTDEBUG && _d('Working on server ID', $id);
    my $master_thinks_i_am = $dsn->{server_id};
    if ( !defined $id
@@ -10926,8 +10964,14 @@ sub get_master_status {
       return;
    }
 
-   my $sth = $self->{sths}->{$dbh}->{MASTER_STATUS}
+   my $sth;
+   if ( $self->{sths}->{$dbh} && $dbh && $self->{sths}->{$dbh} == $dbh ) {
+      $sth = $self->{sths}->{$dbh}->{MASTER_STATUS}
          ||= $dbh->prepare('SHOW MASTER STATUS');
+   }
+   else {
+      $sth = $dbh->prepare('SHOW MASTER STATUS');
+   }
    PTDEBUG && _d($dbh, 'SHOW MASTER STATUS');
    $sth->execute();
    my ($ms) = @{$sth->fetchall_arrayref({})};
@@ -17020,7 +17064,7 @@ software from Percona.
 
 =head1 COPYRIGHT, LICENSE, AND WARRANTY
 
-This program is copyright 2008-2018 Percona LLC and/or its affiliates.
+This program is copyright 2008-2024 Percona LLC and/or its affiliates.
 
 THIS PROGRAM IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
 WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
@@ -17038,6 +17082,6 @@ Place, Suite 330, Boston, MA  02111-1307  USA.
 
 =head1 VERSION
 
-pt-query-digest 3.5.4
+pt-query-digest 3.5.7
 
 =cut

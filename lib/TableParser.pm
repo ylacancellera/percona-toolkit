@@ -310,15 +310,11 @@ sub find_possible_keys {
 #   * dbh  dbh: active dbh
 #   * db   scalar: database name to check
 #   * tbl  scalar: table name to check
-# Optional args:
-#   * all_privs  bool: check for all privs (select,insert,update,delete)
 # Returns: bool
 # Can die: no
-# check_table() checks the given table for certain criteria and returns
-# true if all criteria are found, else it returns false.  The existence
-# of the table is always checked; if no optional args are given, then this
-# is the only check.  Any error causes a false return value (e.g. if the
-# table is crashed).
+# check_table() checks the given table for the existence and returns
+# true if the table is found, else it returns false.
+# Any error causes a false return value (e.g. if the table is crashed).
 sub check_table {
    my ( $self, %args ) = @_;
    my @required_args = qw(dbh db tbl);
@@ -327,10 +323,32 @@ sub check_table {
    }
    my ($dbh, $db, $tbl) = @args{@required_args};
    my $q      = $self->{Quoter} || 'Quoter';
+   $self->{check_table_error} = undef;
+
+   # https://dev.mysql.com/doc/refman/8.0/en/identifier-case-sensitivity.html
+   # MySQL may use use case-insensitive table lookup, this is controller by
+   # @@lower_case_table_names. 0 means case sensitive search, 1 or 2 means
+   # case insensitive lookup.
+
+   my $lctn_sql = 'SELECT @@lower_case_table_names';
+   PTDEBUG && _d($lctn_sql);
+
+   my $lower_case_table_names;
+   eval { ($lower_case_table_names) = $dbh->selectrow_array($lctn_sql); };
+   if ( $EVAL_ERROR ) {
+      PTDEBUG && _d($EVAL_ERROR);
+      $self->{check_table_error} = $EVAL_ERROR;
+      return 0;
+   }
+
+   PTDEBUG && _d("lower_case_table_names=$lower_case_table_names");
+   if ($lower_case_table_names > 0) {
+       PTDEBUG && _d("MySQL uses case-insensitive lookup, converting '$tbl' to lowercase");
+       $tbl = lc $tbl;
+   }
+
    my $db_tbl = $q->quote($db, $tbl);
    PTDEBUG && _d('Checking', $db_tbl);
-
-   $self->{check_table_error} = undef;
 
    my $sql = "SHOW TABLES FROM " . $q->quote($db)
            . ' LIKE ' . $q->literal_like($tbl);

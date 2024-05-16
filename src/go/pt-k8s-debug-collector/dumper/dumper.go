@@ -20,16 +20,17 @@ import (
 
 // Dumper struct is for dumping cluster
 type Dumper struct {
-	cmd         string
-	kubeconfig  string
-	resources   []string
-	filePaths   []string
-	namespace   string
-	location    string
-	errors      string
-	mode        int64
-	crType      string
-	forwardport string
+	cmd           string
+	kubeconfig    string
+	resources     []string
+	filePaths     []string
+	fileContainer string
+	namespace     string
+	location      string
+	errors        string
+	mode          int64
+	crType        string
+	forwardport   string
 }
 
 var resourcesRe = regexp.MustCompile(`(\w+)\.(\w+).percona\.com`)
@@ -124,6 +125,7 @@ func New(location, namespace, resource string, kubeconfig string, forwardport st
 			"var/lib/mysql/mysqld.post.processing.log",
 			"var/lib/mysql/auto.cnf",
 		)
+		d.fileContainer = "logs"
 	}
 	d.resources = resources
 	d.crType = resource
@@ -272,7 +274,7 @@ func (d *Dumper) DumpCluster() error {
 				// get individual Logs
 				location = filepath.Join(d.location, ns.Name, pod.Name)
 				for _, path := range d.filePaths {
-					err = d.getIndividualFiles(resourceType(d.crType), ns.Name, pod.Name, path, location, tw)
+					err = d.getIndividualFiles(ns.Name, pod.Name, path, location, tw)
 					if err != nil {
 						d.logError(err.Error(), "get file "+path+" for pod "+pod.Name)
 						log.Printf("Error: get %s file: %v", path, err)
@@ -370,13 +372,15 @@ type crSecrets struct {
 	} `json:"spec"`
 }
 
-// TODO: check if resource parameter is really needed
-func (d *Dumper) getIndividualFiles(resource, namespace string, podName, path, location string, tw *tar.Writer) error {
-	args := []string{"-n", namespace, "cp", podName + ":" + path, "/dev/stdout"}
+func (d *Dumper) getIndividualFiles(namespace string, podName, path, location string, tw *tar.Writer) error {
+	if len(d.fileContainer) == 0 {
+		return errors.Errorf("Logs container name is not specified for resource %s in namespace %s", resourceType(d.crType), d.namespace)
+	}
+	args := []string{"-n", namespace, "-c", d.fileContainer, "cp", podName + ":" + path, "/dev/stdout"}
 	output, err := d.runCmd(args...)
 	if err != nil {
 		d.logError(err.Error(), args...)
-		log.Printf("Error: get path %s for resource %s in namespace %s: %v", path, resource, d.namespace, err)
+		log.Printf("Error: get path %s for resource %s in namespace %s: %v", path, resourceType(d.crType), d.namespace, err)
 		return addToArchive(location, d.mode, []byte(err.Error()), tw)
 	}
 
@@ -417,77 +421,15 @@ func (d *Dumper) getPodSummary(resource, podName, crName string, namespace strin
 		}
 		ports = port + ":3306"
 		summCmdName = "pt-mysql-summary"
-		summCmdArgs = []string{"--host=127.0.0.1", "--port=" + port, "--user=root", "--password='" + string(pass) + "'"}
-	case "pg":
-		var user, pass, port string
-		if d.forwardport != "" {
-			port = d.forwardport
-		} else {
-			port = "5432"
+		summCmdArgs = []string{"--host=127.0.0.1", "--port=" + port, "--user=root", "--password=" + string(pass)}
+	case "pg", "pgv2":
+		var kubeconfig string
+		if d.kubeconfig != "" {
+			kubeconfig = " --kubeconfig=" + d.kubeconfig
 		}
-		cr, err := d.getCR("pgclusters", namespace)
-		if err != nil {
-			return nil, errors.Wrap(err, "get cr")
-		}
-		if cr.Spec.SecretName != "" {
-			user, err = d.getDataFromSecret(cr.Spec.SecretName, "username", namespace)
-		} else {
-			user, err = d.getDataFromSecret(crName+"-postgres-secret", "username", namespace)
-		}
-		if err != nil {
-			return nil, errors.Wrap(err, "get user from PostgreSQL users secret")
-		}
-		if cr.Spec.SecretName != "" {
-			pass, err = d.getDataFromSecret(cr.Spec.SecretName, "password", namespace)
-		} else {
-			pass, err = d.getDataFromSecret(crName+"-postgres-secret", "password", namespace)
-		}
-		if err != nil {
-			return nil, errors.Wrap(err, "get password from PostgreSQL users secret")
-		}
-		ports = port + ":5432"
 		summCmdName = "sh"
-		summCmdArgs = []string{"-c", "curl https://raw.githubusercontent.com/percona/support-snippets/master/postgresql/pg_gather/gather.sql" +
-			" 2>/dev/null | PGPASSWORD='" + string(pass) + "' psql -X --host=127.0.0.1 --port=" + port + " --user='" + user + "'"}
-	case "pgv2":
-		var user, pass, port string
-		if d.forwardport != "" {
-			port = d.forwardport
-		} else {
-			port = "5432"
-		}
-		cr, err := d.getCR("perconapgclusters/"+crName, namespace)
-		if err != nil {
-			return nil, errors.Wrap(err, "get cr")
-		}
-		if cr.Spec.SecretName != "" {
-			user, err = d.getDataFromSecret(cr.Spec.SecretName, "user", namespace)
-		} else if len(cr.Spec.Users) > 0 && cr.Spec.Users[0].Name != "" {
-			user = cr.Spec.Users[0].Name
-		} else {
-			user, err = d.getDataFromSecret(crName+"-pguser-"+crName, "user", namespace)
-		}
-		if err != nil {
-			return nil, errors.Wrap(err, "get user from PostgreSQL users secret")
-		}
-		if cr.Spec.SecretName != "" {
-			pass, err = d.getDataFromSecret(cr.Spec.SecretName, "password", namespace)
-		} else if len(cr.Spec.Users) > 0 {
-			if cr.Spec.Users[0].SecretName != "" {
-				pass, err = d.getDataFromSecret(cr.Spec.Users[0].SecretName, "password", namespace)
-			} else {
-				pass, err = d.getDataFromSecret(crName+"-pguser-"+user, "password", namespace)
-			}
-		} else {
-			pass, err = d.getDataFromSecret(crName+"-pguser-"+crName, "password", namespace)
-		}
-		if err != nil {
-			return nil, errors.Wrap(err, "get password from PostgreSQL users secret")
-		}
-		ports = port + ":5432"
-		summCmdName = "sh"
-		summCmdArgs = []string{"-c", "curl https://raw.githubusercontent.com/percona/support-snippets/master/postgresql/pg_gather/gather.sql" +
-			" 2>/dev/null | PGPASSWORD='" + string(pass) + "' psql -X --host=127.0.0.1 --port=" + port + " --user='" + user + "'"}
+		summCmdArgs = []string{"-c", "curl https://raw.githubusercontent.com/percona/support-snippets/master/postgresql/pg_gather/gather.sql 2>/dev/null | " +
+			d.cmd + kubeconfig + " -n " + namespace + " exec -i " + podName + " -- psql -X -f - "}
 	case "psmdb":
 		var port string
 		if d.forwardport != "" {
@@ -501,7 +443,7 @@ func (d *Dumper) getPodSummary(resource, podName, crName string, namespace strin
 		}
 		user, err := d.getDataFromSecret(cr.Spec.Secrets.Users, "MONGODB_DATABASE_ADMIN_USER", namespace)
 		if err != nil {
-			return nil, errors.Wrap(err, "get password from psmdb users secret")
+			return nil, errors.Wrap(err, "get user name from psmdb users secret")
 		}
 		pass, err := d.getDataFromSecret(cr.Spec.Secrets.Users, "MONGODB_DATABASE_ADMIN_PASSWORD", namespace)
 		if err != nil {
@@ -509,7 +451,7 @@ func (d *Dumper) getPodSummary(resource, podName, crName string, namespace strin
 		}
 		ports = port + ":27017"
 		summCmdName = "pt-mongodb-summary"
-		summCmdArgs = []string{"--username='" + user + "'", "--password='" + pass + "'", "--authenticationDatabase=admin", "127.0.0.1:" + port}
+		summCmdArgs = []string{"--username=" + user, "--password=" + string(pass), "--authenticationDatabase=admin", "127.0.0.1:" + port}
 	}
 
 	cmdPortFwd := exec.Command(d.cmd, "port-forward", "pod/"+podName, ports, "-n", namespace, "--kubeconfig", d.kubeconfig)

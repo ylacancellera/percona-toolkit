@@ -330,7 +330,7 @@ sub transform {
    # Dispatch to a class method to generate the tree.
    # ##################################################################
    my $no_matching_row = join('|',
-      "Impossible (?:WHERE|HAVING)(?: noticed after reading const tables)?",
+      "Impossible (?:WHERE|HAVING|ON)(?: noticed after reading const tables| condition)?",
       'No matching.*row',
       '(?:unique|const) row not found',
    );
@@ -499,6 +499,13 @@ sub ref_or_null {
 
 sub const {
    my ( $self, $row ) = @_;
+   if ( !$row->{key} ) {
+      return {
+         type => 'Constant table access',
+         rows => $row->{rows},
+         children => [$self->table($row)]
+      }
+   }
    return $self->index_access($row, 'Constant index lookup');
 }
 
@@ -2047,7 +2054,7 @@ sub get_dbh {
                . "DBD::mysql is not installed, try:\n"
                . "  Debian/Ubuntu  apt-get install libdbd-mysql-perl\n"
                . "  RHEL/CentOS    yum install perl-DBD-MySQL\n"
-               . "  OpenSolaris    pgk install pkg:/SUNWapu13dbd-mysql\n";
+               . "  OpenSolaris    pkg install pkg:/SUNWapu13dbd-mysql\n";
          }
          elsif ( $EVAL_ERROR =~ m/not a compiled character set|character set utf8/ ) {
             PTDEBUG && _d('Going to try again without utf8 support');
@@ -3289,7 +3296,7 @@ software from Percona.
 
 =head1 COPYRIGHT, LICENSE, AND WARRANTY
 
-This program is copyright 2011-2021 Percona LLC and/or its affiliates,
+This program is copyright 2011-2024 Percona LLC and/or its affiliates,
 2007-2011 Baron Schwartz.
 
 THIS PROGRAM IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
@@ -3308,6 +3315,6 @@ Place, Suite 330, Boston, MA  02111-1307  USA.
 
 =head1 VERSION
 
-pt-visual-explain 3.5.4
+pt-visual-explain 3.5.7
 
 =cut
