@@ -26,8 +26,6 @@ my $master_dbh = $sb->get_dbh_for('master');
 my $slave1_dbh = $sb->get_dbh_for('slave1'); 
 my $slave2_dbh = $sb->get_dbh_for('slave2'); 
 
-#plan skip_all => 'Skipping';
-
 if ( !$master_dbh ) {
    plan skip_all => 'Cannot connect to sandbox master';
 }
