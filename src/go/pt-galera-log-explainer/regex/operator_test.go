@@ -21,15 +21,14 @@ func TestPXCOperatorRegex(t *testing.T) {
 			},
 			expected: regexTestState{
 				LogCtx: types.LogCtx{
-					MyIdx:       "0",
-					MemberCount: 3,
-					OwnHashes:   []string{"45406e8d-95fc"},
-					OwnNames:    []string{"cluster1-0"},
+					MyIdx:     "0",
+					OwnHashes: []string{"45406e8d-95fc"},
+					OwnNames:  []string{"cluster1-0"},
 				},
 				HashToNodeNames: map[string]string{"45406e8d-95fc": "cluster1-0", "5bf18376-8333": "cluster1-2", "66e2b7bf-8000": "cluster1-1"},
 				State:           "PRIMARY",
 			},
-			expectedOut: "view member count: 3; 45406e8d-95fc is cluster1-0; 5bf18376-8333 is cluster1-2; 66e2b7bf-8000 is cluster1-1; ",
+			expectedOut: "45406e8d-95fc is cluster1-0; 5bf18376-8333 is cluster1-2; 66e2b7bf-8000 is cluster1-1; ",
 			key:         "RegexOperatorMemberAssociations",
 		},
 
@@ -55,6 +54,21 @@ func TestPXCOperatorRegex(t *testing.T) {
 			log:         "{\"log\":\"2023-07-05T08:17:23.447015Z 0 [Note] [MY-000000] [Galera] GCache::RingBuffer initial scan...  0.0% (         0/1073741848 bytes) complete.\n\",\"file\":\"/var/lib/mysql/mysqld-error.log\"}",
 			expectedOut: "recovering gcache",
 			key:         "RegexGcacheScan",
+		},
+
+		{
+			log: "wsrep_node_incoming_address=cluster1-0.cluster1.pxc.svc.cluster.local:3306",
+			expected: regexTestState{
+				LogCtx: types.LogCtx{
+					OperatorMetadata: &types.OperatorMetadata{
+						PodName:    "cluster1-0",
+						Deployment: "cluster1",
+						Namespace:  "pxc",
+					},
+				},
+			},
+			expectedOut: "podname: cluster1-0, dep: cluster1, namespace: pxc",
+			key:         "RegexPodName",
 		},
 	}
 

@@ -48,36 +48,20 @@ You can filter by type of events
 
     pt-galera-log-explainer list --sst --views *.log
 
-..
-  whois
-  ~~~~~
-  Find out information about nodes, using any type of info
-  
-  .. code-block:: bash
-  
-      pt-galera-log-explainer whois '218469b2' mysql.log 
-      {
-      	"input": "218469b2",
-      	"IPs": [
-      		"172.17.0.3"
-      	],
-      	"nodeNames": [
-      		"galera-node2"
-      	],
-      	"hostname": "",
-      	"nodeUUIDs:": [
-      		"218469b2",
-      		"259b78a0",
-      		"fa81213d",
-      	]
-      }
-  
-  Using any type of information
-  
-  .. code-block:: bash
-  
-      pt-galera-log-explainer whois '172.17.0.3' mysql.log 
-      pt-galera-log-explainer whois 'galera-node2' mysql.log 
+whois
+~~~~~
+Find out information about nodes, using any type of information
+
+.. code-block:: bash
+
+    pt-galera-log-explainer [flags] whois [--json] [--type { nodename | ip | uuid | auto }] <information to search> <paths ...>
+
+
+.. code-block:: bash
+
+    pt-galera-log-explainer whois '218469b2' mysql.log
+    pt-galera-log-explainer whois '172.17.0.3' mysql.log
+    pt-galera-log-explainer whois 'galera-node2' mysql.log
 
 
 conflicts
@@ -133,17 +117,24 @@ Available flags
     Instead of relying on extracted information, logs will be merged by their base directory 
     It is useful when logs are very sparse and already organized by nodes.
 
+``--skip-merge``
+    Disable the ability to merge log files together. Can be used when every nodes have the same ``wsrep_node_name``
+
 ``-v``, ``--verbosity``        
     ``-v``: display in the timeline every mysql info the tool used
     ``-vv``: internal tool debug
 
 ``--pxc-operator``       
-    Analyze logs from Percona PXC operator. 
-    It will prevent logs from being merged together, add operator specific regexes, and fine-tune regexes for logs taken from pt-k8s-debug-collector
+    Analyze logs from Percona PXC operator. Operator logs should be automatically detected (see ``--skip-operator-detection``).
+    It will prevent logs from being merged together, add operator specific regexes, and fine-tune regexes for logs taken from ``pt-k8s-debug-collector``.
     Off by default because it negatively impacts performance for non-k8s setups.
 
+``--skip-operator-detection``
+    Disable automatic detection of PXC operator logs. When detected, a message will be shown.
+    Detection is done using a prefix regex.
+
 ``--exclude-regexes``
-    Remove regexes from analysis. Use 'pt-galera-log-explainer regex-list | jq .' to have the list
+    Remove regexes from analysis. Use ``pt-galera-log-explainer regex-list | jq .`` to have the list
     
 ``--grep-cmd``
     grep v3 binary command path. For Darwin systems, it could need to be set to ``ggrep``
@@ -151,6 +142,11 @@ Available flags
 
 ``--version``
     Show version and exit.
+
+``--custom-regexes``
+    Add custom regexes, printed in magenta. Format: (golang regex string)=[optional static message to display].
+    If the static message is left empty, the captured string will be printed instead. Custom regexes are separated using semi-colon.
+    Example: ``--custom-regexes="Page cleaner took [0-9]*ms to flush [0-9]* pages=;doesn't recommend.*pxc_strict_mode=unsafe query used"``
 
 
 Example outputs
@@ -207,6 +203,24 @@ Example outputs
     2023-03-12T19:44:59.855443Z   |                                          node1 left                              |                                       
     2023-03-12T19:44:59.855491Z   |                                          PRIMARY(n=2)                            |                        
 
+    $ pt-galera-log-explainer whois 172.17.0.2 --no-color  tests/logs/upgrade/*
+    ip:
+    └── 172.17.0.2
+        ├── nodename:
+        │   └── node1 (2023-03-12 19:35:07.644683 +0000 UTC)
+        │
+        └── uuid:
+            ├── 1d3ea8f5 (2023-03-12 07:24:13.789261 +0000 UTC)
+            ├── 54ab931e (2023-03-12 07:43:08.563339 +0000 UTC)
+            ├── fecde235 (2023-03-12 08:46:48.963504 +0000 UTC)
+            ├── a07872e1 (2023-03-12 08:49:41.206124 +0000 UTC)
+            ├── 60da0bf9-aa9c (2023-03-12 12:29:48.873397 +0000 UTC)
+            ├── 35b62086-902c (2023-03-12 13:04:23.979636 +0000 UTC)
+            ├── ca2c2a5f-a82a (2023-03-12 19:35:05.878879 +0000 UTC)
+            └── eefb9c8a-b69a (2023-03-12 19:43:17.133756 +0000 UTC)
+
+
+
 Requirements
 ============
 
@@ -229,5 +243,4 @@ Known issues
   This is mainly when the log file does not contain enough information.
 * Some information will seems missed. Depending on the case, it may be simply unimplemented yet, or it was disabled later because it was found to be unreliable (node index numbers are not reliable for example)
 * Columns width are sometimes too large to be easily readable. This usually happens when printing SST events with long node names
-* Using ``list`` on PXC operator logs can silently lead to broken results, ``--pxc-operator`` should be used
 * When some display corner-cases seems broken (events not deduplicated, ...), it is because of extra hidden internal events.

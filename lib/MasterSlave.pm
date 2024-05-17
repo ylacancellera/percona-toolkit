@@ -181,7 +181,8 @@ sub recurse_to_slaves {
    my $slave_dsn = $dsn;
    if ($slave_user) {
       $slave_dsn->{u} = $slave_user;
-      PTDEBUG && _d("Using slave user $slave_user on ".$slave_dsn->{h}.":".$slave_dsn->{P});
+      PTDEBUG && _d("Using slave user $slave_user on "
+         . $slave_dsn->{h} . ":" . ( $slave_dsn->{P} ? $slave_dsn->{P} : ""));
    }
    if ($slave_password) {
       $slave_dsn->{p} = $slave_password;
@@ -538,8 +539,14 @@ sub get_master_status {
       return;
    }
 
-   my $sth = $self->{sths}->{$dbh}->{MASTER_STATUS}
+   my $sth;
+   if ( $self->{sths}->{$dbh} && $dbh && $self->{sths}->{$dbh} == $dbh ) {
+      $sth = $self->{sths}->{$dbh}->{MASTER_STATUS}
          ||= $dbh->prepare('SHOW MASTER STATUS');
+   }
+   else {
+      $sth = $dbh->prepare('SHOW MASTER STATUS');
+   }
    PTDEBUG && _d($dbh, 'SHOW MASTER STATUS');
    $sth->execute();
    my ($ms) = @{$sth->fetchall_arrayref({})};
