@@ -2,7 +2,7 @@ Changelog for Percona Toolkit
 
 v3.6.0 released 2024-06-10
 
-* Feature PR-754: Port improved pt-pmp (Thanks to  Alexey Stroganov for the contribution)
+* Feature PR-754: Port improved pt-pmp (Thanks to Alexey Stroganov for the contribution)
 * Feature PT-1751: adds --where param to pt-online-schema-change
 * Feature PT-1717: resume pt-online-schema-change if interrupted
 * Improvement PT-2100: fixed Wide character error (Thanks to Satoshi MITANI for the contribution)
