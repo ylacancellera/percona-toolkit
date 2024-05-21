@@ -199,7 +199,7 @@ func New(location, namespace, resource string, kubeconfig string, forwardport st
 			},
 			sslSecret{
 				secret:    "{{ .Name }}-ca-cert",
-				resource:  "pxc",
+				resource:  "ps",
 				dataNames: []string{"ca.crt", "tls.crt"},
 			},
 		)
@@ -212,12 +212,12 @@ func New(location, namespace, resource string, kubeconfig string, forwardport st
 			},
 			sslSecret{
 				secret:    "{{ .Name }}-ssl-internal",
-				resource:  "pxc",
+				resource:  "psmdb",
 				dataNames: []string{"ca.crt", "tls.crt"},
 			},
 			sslSecret{
 				secret:    "{{ .Name }}-ca-cert",
-				resource:  "pxc",
+				resource:  "psmdb",
 				dataNames: []string{"ca.crt", "tls.crt"},
 			},
 		)
