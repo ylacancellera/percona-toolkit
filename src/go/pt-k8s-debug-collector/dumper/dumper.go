@@ -99,7 +99,7 @@ func New(location, namespace, resource string, kubeconfig string, forwardport st
 		)
 	case "pgv2":
 		resources = append(resources,
-			".perconapgbackups.pgv2.percona.com",
+			"perconapgbackups.pgv2.percona.com",
 			"perconapgclusters.pgv2.percona.com",
 			"perconapgrestores.pgv2.percona.com",
 		)
