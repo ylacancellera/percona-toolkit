@@ -18,11 +18,7 @@ require "$trunk/bin/pt-table-sync";
 my $dp = new DSNParser(opts=>$dsn_opts);
 my $sb = new Sandbox(basedir => '/tmp', DSNParser => $dp);
 
-if ($sandbox_version ge '8.0') {
-    plan skip_all => "TODO master master sandbox is failing with MySQL 8.0+. FIX ME !!!!";
-} else {
-    plan tests => 4;
-}
+plan tests => 4;
 
 # #############################################################################
 # Ensure that syncing master-master works OK

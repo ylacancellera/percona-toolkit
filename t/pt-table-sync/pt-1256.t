@@ -19,6 +19,7 @@ use Test::More;
 use PerconaTest;
 use Sandbox;
 require "$trunk/bin/pt-table-sync";
+require VersionParser;
 
 my $dp = new DSNParser(opts=>$dsn_opts);
 my $sb = new Sandbox(basedir => '/tmp', DSNParser => $dp);
@@ -49,6 +50,7 @@ $sb->load_file('master', "t/lib/samples/charset.sql");
 
 my $put = encode('UTF-8','абвгд');
 my $want = 'абвгд';
+my $row;
 
 $master_dbh->do("SET NAMES 'utf8'");
 $slave1_dbh->do("SET NAMES 'utf8'");
@@ -72,21 +74,25 @@ like(
    "PT-1256 Set the correct charset"
 );
 
-# 2
-my $row = $slave1_dbh->selectrow_hashref("SELECT f2 FROM test.t1 WHERE id = 1");
-is(
-    $row->{f2},
-    $want,
-    "Character set is correct",
-) or diag("Want '".($want||"")."', got '".($row->{f2}||"")."'");
-
 SKIP: {
-    skip "Skipping in MySQL 8.0.4-rc since there is an error in the server itself", 2 if ($sandbox_version ge '8.0');
+   my $vp = VersionParser->new($master_dbh);
+   if ($vp->cmp('8.0') > -1 && $vp->cmp('8.0.14') < 0 && $vp->flavor() !~ m/maria/i) {
+      skip "Skipping in MySQL 8.0.4-rc - 8.0.13 since there is an error in the server itself", 3;
+   }
+   # 2
+   $row = $slave1_dbh->selectrow_hashref("SELECT f2 FROM test.t1 WHERE id = 1");
+   is(
+      $row->{f2},
+      $want,
+      "Character set is correct",
+   ) or diag("Want '".($want||"")."', got '".($row->{f2}||"")."'");
+
     # 3
     $output = `$trunk/bin/pt-table-sync --execute --lock-and-rename h=127.1,P=12345,u=msandbox,p=msandbox,D=test,t=t1 t=t2 2>&1`;
     $output = `/tmp/12345/use -e 'show create table test.t2'`;
     like($output, qr/COMMENT='test1'/, '--lock-and-rename worked');
     
+    #4
     $row = $slave1_dbh->selectrow_hashref("SELECT f2 FROM test.t2 WHERE id = 1");
     is(
         $row->{f2},

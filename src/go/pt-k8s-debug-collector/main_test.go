@@ -215,6 +215,157 @@ func TestResourceOption(t *testing.T) {
 }
 
 /*
+PT-2299 - collect openssl x509 certificate information for each secret
+*/
+func TestSSLResourceOption(t *testing.T) {
+	tests := []struct {
+		name       string
+		resource   string
+		cmds       [][]string // slice of commands to execute
+		want       []string   // slice of expected results
+		kubeconfig string
+	}{
+		{
+			name:     "auto pxc",
+			resource: "auto",
+			cmds: [][]string{
+				{"tar", "--to-command", "grep -m 1 -o ca.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl"},
+				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl"},
+				{"tar", "--to-command", "grep -m 1 -o tls.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl"},
+				{"tar", "--to-command", "grep -m 1 -o ca.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl-internal"},
+				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl-internal"},
+				{"tar", "--to-command", "grep -m 1 -o tls.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl-internal"},
+				{"tar", "--to-command", "grep -m 1 -o ca.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ca-cert"},
+				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ca-cert"},
+				{"tar", "--to-command", "grep -m 1 -o tls.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ca-cert"},
+			},
+			want: []string{
+				"ca.crt",
+				"Certificate",
+				"tls.crt",
+				"ca.crt",
+				"Certificate",
+				"tls.crt",
+				"ca.crt",
+				"Certificate",
+				"tls.crt",
+			},
+			kubeconfig: os.Getenv("KUBECONFIG_PXC"),
+		},
+		{
+			name:     "auto ps",
+			resource: "auto",
+			cmds: [][]string{
+				{"tar", "--to-command", "grep -m 1 -o ca.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl"},
+				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl"},
+				{"tar", "--to-command", "grep -m 1 -o tls.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl"},
+				{"tar", "--to-command", "grep -m 1 -o ca.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ca-cert"},
+				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ca-cert"},
+				{"tar", "--to-command", "grep -m 1 -o tls.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ca-cert"},
+			},
+			want: []string{
+				"ca.crt",
+				"Certificate",
+				"tls.crt",
+				"ca.crt",
+				"Certificate",
+				"tls.crt",
+			},
+			kubeconfig: os.Getenv("KUBECONFIG_PS"),
+		},
+		{
+			name:     "auto psmdb",
+			resource: "auto",
+			cmds: [][]string{
+				{"tar", "--to-command", "grep -m 1 -o ca.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl"},
+				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl"},
+				{"tar", "--to-command", "grep -m 1 -o tls.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl"},
+				{"tar", "--to-command", "grep -m 1 -o ca.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl-internal"},
+				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl-internal"},
+				{"tar", "--to-command", "grep -m 1 -o tls.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl-internal"},
+				{"tar", "--to-command", "grep -m 1 -o ca.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ca-cert"},
+				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ca-cert"},
+				{"tar", "--to-command", "grep -m 1 -o tls.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ca-cert"},
+			},
+			want: []string{
+				"ca.crt",
+				"Certificate",
+				"tls.crt",
+				"ca.crt",
+				"Certificate",
+				"tls.crt",
+				"ca.crt",
+				"Certificate",
+				"tls.crt",
+			},
+			kubeconfig: os.Getenv("KUBECONFIG_PSMDB"),
+		},
+		{
+			name:     "auto pg",
+			resource: "auto",
+			cmds: [][]string{
+				{"tar", "--to-command", "grep -m 1 -o ca.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl-ca"},
+				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl-ca"},
+				{"tar", "--to-command", "grep -m 1 -o tls.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl-keypair"},
+				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-ssl-keypair"},
+				{"tar", "--to-command", "grep -m 1 -o tls.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/pgo.tls"},
+				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/pgo.tls"},
+			},
+			want: []string{
+				"ca.crt",
+				"Certificate",
+				"tls.crt\ntls.crt",
+				"Certificate\nCertificate",
+				"tls.crt",
+				"Certificate",
+			},
+			kubeconfig: os.Getenv("KUBECONFIG_PG"),
+		},
+		{
+			name:     "auto pgv2",
+			resource: "auto",
+			cmds: [][]string{
+				{"tar", "--to-command", "grep -m 1 -o ca.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-cluster-cert"},
+				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-cluster-cert"},
+				{"tar", "--to-command", "grep -m 1 -o tls.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/*-cluster-cert"},
+				{"tar", "--to-command", "grep -m 1 -o root.crt", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/pgo-root-cacert"},
+				{"tar", "--to-command", "grep -m 1 -o Certificate", "-xzf", "cluster-dump.tar.gz", "--wildcards", "cluster-dump/*/pgo-root-cacert"},
+			},
+			want: []string{
+				"ca.crt",
+				"Certificate",
+				"tls.crt",
+				"root.crt",
+				"Certificate",
+			},
+			kubeconfig: os.Getenv("KUBECONFIG_PG2"),
+		},
+	}
+
+	for _, test := range tests {
+		cmd := exec.Command("../../../bin/pt-k8s-debug-collector", "--kubeconfig", test.kubeconfig, "--forwardport", os.Getenv("FORWARDPORT"), "--resource", test.resource)
+		if err := cmd.Run(); err != nil {
+			t.Errorf("error executing pt-k8s-debug-collector: %s", err.Error())
+		}
+		defer func() {
+			cmd = exec.Command("rm", "-f", "cluster-dump.tar.gz")
+			if err := cmd.Run(); err != nil {
+				t.Errorf("error cleaning up test data: %s", err.Error())
+			}
+		}()
+		for ind, testcmd := range test.cmds {
+			out, err := exec.Command(testcmd[0], testcmd[1:]...).Output()
+			if err != nil {
+				t.Errorf("test %s, error running command %s:\n%s\n\nCommand output:\n%s", test.name, testcmd, err.Error(), out)
+			}
+			if strings.TrimRight(bytes.NewBuffer(out).String(), "\n") != test.want[ind] {
+				t.Errorf("test %s, output is not as expected\nOutput: %s\nWanted: %s", test.name, out, test.want)
+			}
+		}
+	}
+}
+
+/*
 Option --version
 */
 func TestVersionOption(t *testing.T) {

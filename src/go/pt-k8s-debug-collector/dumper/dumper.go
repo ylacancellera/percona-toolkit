@@ -12,11 +12,19 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 )
+
+// sslSecret struct for dumping certificates
+type sslSecret struct {
+	secret    string
+	resource  string
+	dataNames []string
+}
 
 // Dumper struct is for dumping cluster
 type Dumper struct {
@@ -31,9 +39,10 @@ type Dumper struct {
 	mode          int64
 	crType        string
 	forwardport   string
+	sslSecrets    []sslSecret
 }
 
-var resourcesRe = regexp.MustCompile(`(\w+)\.(\w+).percona\.com`)
+var resourcesRe = regexp.MustCompile(`(\w+\.(\w+).percona\.com)`)
 
 // New return new Dumper object
 func New(location, namespace, resource string, kubeconfig string, forwardport string) Dumper {
@@ -65,7 +74,7 @@ func New(location, namespace, resource string, kubeconfig string, forwardport st
 		"persistentvolumes",
 	}
 
-	switch resource {
+	switch resourceType(resource) {
 	case "auto":
 		result, err := d.runCmd("api-resources", "-o", "name")
 		if err != nil {
@@ -82,39 +91,77 @@ func New(location, namespace, resource string, kubeconfig string, forwardport st
 		}
 	case "pg":
 		resources = append(resources,
-			"perconapgclusters",
-			"pgclusters",
-			"pgpolicies",
-			"pgreplicas",
-			"pgtasks",
+			"perconapgclusters.pg.percona.com",
+			"pgclusters.pg.percona.com",
+			"pgpolicies.pg.percona.com",
+			"pgreplicas.pg.percona.com",
+			"pgtasks.pg.percona.com",
 		)
 	case "pgv2":
 		resources = append(resources,
-			"perconapgbackups",
-			"perconapgclusters",
-			"perconapgrestores",
+			"perconapgbackups.pgv2.percona.com",
+			"perconapgclusters.pgv2.percona.com",
+			"perconapgrestores.pgv2.percona.com",
 		)
 	case "pxc":
 		resources = append(resources,
-			"perconaxtradbclusterbackups",
-			"perconaxtradbclusterrestores",
-			"perconaxtradbclusters",
+			"perconaxtradbclusterbackups.pxc.percona.com",
+			"perconaxtradbclusterrestores.pxc.percona.com",
+			"perconaxtradbclusters.pxc.percona.com",
 		)
 	case "ps":
 		resources = append(resources,
-			"perconaservermysqlbackups",
-			"perconaservermysqlrestores",
-			"perconaservermysqls",
+			"perconaservermysqlbackups.ps.percona.com",
+			"perconaservermysqlrestores.ps.percona.com",
+			"perconaservermysqls.ps.percona.com",
 		)
 	case "psmdb":
 		resources = append(resources,
-			"perconaservermongodbbackups",
-			"perconaservermongodbrestores",
-			"perconaservermongodbs",
+			"perconaservermongodbbackups.psmdb.percona.com",
+			"perconaservermongodbrestores.psmdb.percona.com",
+			"perconaservermongodbs.psmdb.percona.com",
 		)
 	}
+	sslSecrets := make([]sslSecret, 0)
 	filePaths := make([]string, 0)
-	if resourceType(resource) == "pxc" {
+	switch resourceType(resource) {
+	case "pg":
+		sslSecrets = append(sslSecrets,
+			sslSecret{
+				secret:    "{{ .Name }}-ssl-ca",
+				resource:  "perconapgclusters.pg.percona.com",
+				dataNames: []string{"ca.crt"},
+			},
+			sslSecret{
+				secret:    "{{ .Name }}-ssl-keypair",
+				resource:  "perconapgclusters.pg.percona.com",
+				dataNames: []string{"tls.crt"},
+			},
+			sslSecret{
+				secret:    "{{ .Name }}-replication-ssl-keypair",
+				resource:  "perconapgclusters.pg.percona.com",
+				dataNames: []string{"tls.crt"},
+			},
+			sslSecret{
+				secret:    "pgo.tls",
+				resource:  "perconapgclusters.pg.percona.com",
+				dataNames: []string{"tls.crt"},
+			},
+		)
+	case "pgv2":
+		sslSecrets = append(sslSecrets,
+			sslSecret{
+				secret:    "{{ .Name }}-cluster-cert",
+				resource:  "pg",
+				dataNames: []string{"ca.crt", "tls.crt"},
+			},
+			sslSecret{
+				secret:    "pgo-root-cacert",
+				resource:  "pg",
+				dataNames: []string{"root.crt"},
+			},
+		)
+	case "pxc":
 		filePaths = append(filePaths,
 			"var/lib/mysql/mysqld-error.log",
 			"var/lib/mysql/innobackup.backup.log",
@@ -126,8 +173,57 @@ func New(location, namespace, resource string, kubeconfig string, forwardport st
 			"var/lib/mysql/auto.cnf",
 		)
 		d.fileContainer = "logs"
+		sslSecrets = append(sslSecrets,
+			sslSecret{
+				secret:    "{{ .Name }}-ssl",
+				resource:  "pxc",
+				dataNames: []string{"ca.crt", "tls.crt"},
+			},
+			sslSecret{
+				secret:    "{{ .Name }}-ssl-internal",
+				resource:  "pxc",
+				dataNames: []string{"ca.crt", "tls.crt"},
+			},
+			sslSecret{
+				secret:    "{{ .Name }}-ca-cert",
+				resource:  "pxc",
+				dataNames: []string{"ca.crt", "tls.crt"},
+			},
+		)
+	case "ps":
+		sslSecrets = append(sslSecrets,
+			sslSecret{
+				secret:    "{{ .Name }}-ssl",
+				resource:  "ps",
+				dataNames: []string{"ca.crt", "tls.crt"},
+			},
+			sslSecret{
+				secret:    "{{ .Name }}-ca-cert",
+				resource:  "ps",
+				dataNames: []string{"ca.crt", "tls.crt"},
+			},
+		)
+	case "psmdb":
+		sslSecrets = append(sslSecrets,
+			sslSecret{
+				secret:    "{{ .Name }}-ssl",
+				resource:  "psmdb",
+				dataNames: []string{"ca.crt", "tls.crt"},
+			},
+			sslSecret{
+				secret:    "{{ .Name }}-ssl-internal",
+				resource:  "psmdb",
+				dataNames: []string{"ca.crt", "tls.crt"},
+			},
+			sslSecret{
+				secret:    "{{ .Name }}-ca-cert",
+				resource:  "psmdb",
+				dataNames: []string{"ca.crt", "tls.crt"},
+			},
+		)
 	}
 	d.resources = resources
+	d.sslSecrets = sslSecrets
 	d.crType = resource
 	d.filePaths = filePaths
 	return d
@@ -256,7 +352,7 @@ func (d *Dumper) DumpCluster() error {
 					crName = pod.Labels["app.kubernetes.io/instance"]
 				}
 				// Get summary
-				output, err = d.getPodSummary(resourceType(d.crType), pod.Name, crName, ns.Name, tw)
+				output, err = d.getPodSummary(resourceType(d.crType), pod.Name, crName, ns.Name)
 				if err != nil {
 					d.logError(err.Error(), d.crType, pod.Name)
 					err = addToArchive(location, d.mode, []byte(err.Error()), tw)
@@ -287,6 +383,13 @@ func (d *Dumper) DumpCluster() error {
 			err = d.getResource(resource, ns.Name, false, tw)
 			if err != nil {
 				log.Printf("Error: get %s resource: %v", resource, err)
+			}
+		}
+
+		for _, s := range d.sslSecrets {
+			err = d.getSSLCertificates(s, ns.Name, tw)
+			if err != nil {
+				log.Printf("Error: get SSL certificates in %s: %v", s.secret, err)
 			}
 		}
 	}
@@ -390,7 +493,7 @@ func (d *Dumper) getIndividualFiles(namespace string, podName, path, location st
 	return addToArchive(location+"/"+path, d.mode, output, tw)
 }
 
-func (d *Dumper) getPodSummary(resource, podName, crName string, namespace string, tw *tar.Writer) ([]byte, error) {
+func (d *Dumper) getPodSummary(resource, podName, crName string, namespace string) ([]byte, error) {
 	var (
 		summCmdName string
 		ports       string
@@ -476,7 +579,7 @@ func (d *Dumper) getPodSummary(resource, podName, crName string, namespace strin
 	cmd.Stderr = &errb
 	err := cmd.Run()
 	if err != nil {
-		return nil, errors.Errorf("error: %v\nstderr: %sstdout: %s", err, errb.String(), outb.String())
+		return nil, errors.Wrapf(err, "stderr: %s\nstdout: %s", errb.String(), outb.String())
 	}
 	return outb.Bytes(), nil
 }
@@ -508,8 +611,85 @@ func (d *Dumper) getDataFromSecret(secretName, dataName string, namespace string
 	return string(pass), nil
 }
 
+func (d *Dumper) getSSLDataFromSecret(secretName, dataName string, namespace string) (string, error) {
+	data, err := d.runCmd("get", "secrets/"+secretName, "-o", "go-template='{{ index .data \""+dataName+"\"  | base64decode }}'", "-n", namespace)
+	if err != nil {
+		return "", errors.Wrap(err, "run get secret cmd")
+	}
+
+	return string(data), nil
+}
+
+func (d *Dumper) getSSLCertificates(secret sslSecret, namespace string, tw *tar.Writer) error {
+	cr := struct {
+		Items []struct {
+			Metadata struct {
+				Name string `json:"name"`
+			} `json:"metadata"`
+		} `json:"items"`
+	}{}
+
+	output, err := d.runCmd("get", secret.resource, "-o", "json", "-n", namespace)
+	if err != nil {
+		return errors.Wrap(err, "get "+secret.resource)
+	}
+	err = json.Unmarshal(output, &cr)
+	if err != nil {
+		return errors.Wrapf(err, "unmarshal %s cr", secret.resource)
+	}
+
+	if len(cr.Items) > 1 {
+		return errors.Wrap(err, "Unexpected structure for resource "+secret.resource)
+	}
+
+	for _, item := range cr.Items {
+		location := d.location
+
+		if len(namespace) > 0 {
+			location = filepath.Join(d.location, namespace)
+		}
+
+		var nb bytes.Buffer
+		t := template.Must(template.New("secret").Parse(secret.secret))
+		t.Execute(&nb, item.Metadata)
+
+		name := nb.String()
+		location = filepath.Join(location, name)
+
+		result := make([]byte, 0)
+		for _, dn := range secret.dataNames {
+			result = append(result, dn+"\n"...)
+			data, err := d.getSSLDataFromSecret(name, dn, namespace)
+			if err != nil {
+				errors.Wrapf(err, "Error getting certificate %s from secret %s", dn, name)
+			}
+
+			var outb, errb bytes.Buffer
+			cmd := exec.Command("sh", "-c", "echo "+data+" | openssl x509 -noout -text")
+			cmd.Stdout = &outb
+			cmd.Stderr = &errb
+			err = cmd.Run()
+			if err != nil {
+				errors.Wrapf(err, "stderr: %s\nstdout: %s", errb.String(), outb.String())
+			}
+			result = append(result, outb.Bytes()...)
+		}
+
+		err = addToArchive(location, d.mode, result, tw)
+
+		if err != nil {
+			return errors.Wrapf(err, "Cannot add certificates in the secret %s into resulting archive", name)
+		}
+
+	}
+
+	return nil
+}
+
 func resourceType(s string) string {
-	if s == "pxc" || strings.HasPrefix(s, "pxc/") {
+	if s == "auto" {
+		return "auto"
+	} else if s == "pxc" || strings.HasPrefix(s, "pxc/") {
 		return "pxc"
 	} else if s == "psmdb" || strings.HasPrefix(s, "psmdb/") {
 		return "psmdb"
