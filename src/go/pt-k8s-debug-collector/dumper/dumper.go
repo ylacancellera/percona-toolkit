@@ -179,6 +179,16 @@ func New(location, namespace, resource string, kubeconfig string, forwardport st
 				resource:  "pxc",
 				dataNames: []string{"ca.crt", "tls.crt"},
 			},
+			sslSecret{
+				secret:    "{{ .Name }}-ssl-internal",
+				resource:  "pxc",
+				dataNames: []string{"ca.crt", "tls.crt"},
+			},
+			sslSecret{
+				secret:    "{{ .Name }}-ca-cert",
+				resource:  "pxc",
+				dataNames: []string{"ca.crt", "tls.crt"},
+			},
 		)
 	case "ps":
 		sslSecrets = append(sslSecrets,
@@ -187,12 +197,27 @@ func New(location, namespace, resource string, kubeconfig string, forwardport st
 				resource:  "ps",
 				dataNames: []string{"ca.crt", "tls.crt"},
 			},
+			sslSecret{
+				secret:    "{{ .Name }}-ca-cert",
+				resource:  "pxc",
+				dataNames: []string{"ca.crt", "tls.crt"},
+			},
 		)
 	case "psmdb":
 		sslSecrets = append(sslSecrets,
 			sslSecret{
 				secret:    "{{ .Name }}-ssl",
 				resource:  "psmdb",
+				dataNames: []string{"ca.crt", "tls.crt"},
+			},
+			sslSecret{
+				secret:    "{{ .Name }}-ssl-internal",
+				resource:  "pxc",
+				dataNames: []string{"ca.crt", "tls.crt"},
+			},
+			sslSecret{
+				secret:    "{{ .Name }}-ca-cert",
+				resource:  "pxc",
 				dataNames: []string{"ca.crt", "tls.crt"},
 			},
 		)
