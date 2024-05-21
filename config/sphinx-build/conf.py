@@ -108,9 +108,6 @@ html_theme = 'percona-theme'
 #  'version_dropdown': True
 #}
 
-html_context = {
-   'edit_uri': 'edit/3.x/source'
-}
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ['.', './percona-theme']
 
