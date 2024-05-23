@@ -8919,7 +8919,7 @@ sub main {
       );
       PTDEBUG && _d($insert_sth);
       $insert_sth->execute($db, $tbl, $o->get('alter'), $json_str);
-      $job_id = $insert_sth->last_insert_id();
+      $job_id = @{$cxn->dbh()->selectall_arrayref('SELECT LAST_INSERT_ID() AS job_id')}[0]->[0];
       print ts("Job ${job_id} started.\n");
       $hist_sth = $cxn->dbh()->prepare(
          "UPDATE ${hist_table} SET lower_boundary = ?, upper_boundary = ? "
