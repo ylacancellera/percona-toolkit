@@ -99,7 +99,7 @@ cmd_ok \
    "opentables1"
 
 cmd_ok \
-   "grep -qP 'Database\tTable\t\In_use' $p-opentables2" \
+   "grep -qP 'Database\tTable\tIn_use' $p-opentables2" \
    "opentables2"
 
 cmd_ok \
