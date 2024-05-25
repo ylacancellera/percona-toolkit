@@ -129,7 +129,7 @@
   "global": {
     "files": [
       {
-        "name": "/home/sveta/src/percona/percona-toolkit/t/lib/samples/slowlogs/slow007.txt",
+        "name": "slow007.txt",
         "size": 368
       }
     ],
