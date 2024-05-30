@@ -10808,8 +10808,11 @@ sub create_history_table {
       $tbl_sql_minimized =~ s/`//g;
       $tbl_sql_minimized =~ s/^\s+//g;
       $tbl_sql_minimized =~ s/engine\=[\w\d_= ]+$//i;
+      $tbl_sql_minimized =~ s/int\(\d+\)/int/i;
 
       if ( lc($sql_minimized) ne lc($tbl_sql_minimized) ) {
+         PTDEBUG && _d("Expected history table structure:\n" , lc($sql_minimized));
+         PTDEBUG && _d("Actual history table structure:\n", lc($tbl_sql_minimized));
          die "--history table $tbl exists but does not have expected structure.\n"
             . "Explected structure:\n$sql \n"
             . "User-defined table:\n$tbl_sql\n"
