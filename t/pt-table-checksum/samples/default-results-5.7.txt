@@ -10,7 +10,6 @@ ERRORS DIFFS ROWS SKIPPED TABLE
 0 0 908 0 mysql.help_keyword
 0 0 1803 0 mysql.help_relation
 0 0 659 0 mysql.help_topic
-0 0 0 0 mysql.ndb_binlog_index
 0 0 0 0 mysql.plugin
 0 0 0 0 mysql.proc
 0 0 0 0 mysql.procs_priv
