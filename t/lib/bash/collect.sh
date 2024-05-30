@@ -39,11 +39,12 @@ ls -1 $PT_TMPDIR/collect | sort > $PT_TMPDIR/collect-files
 # If this system has /proc, then some files should be collected.
 # Else, those files should not exist.
 if [ -f /proc/diskstats ]; then
+   wait_for_files "$p-diskstats"
    cmd_ok \
-      "grep -q '[0-9]' $PT_TMPDIR/collect/2011_12_05-diskstats" \
+      "grep -q '[0-9]' $p-diskstats" \
       "/proc/diskstats"
 else
-   test -f $PT_TMPDIR/collect/2011_12_05-diskstats
+   test -f $PT_TMPDIR/collect/$p-diskstats
    is "$?" "1" "No /proc/diskstats"
 fi
 
@@ -75,6 +76,7 @@ cmd_ok \
    "Finds MySQL error log"
 
 if [ "$(which lsof 2>/dev/null)" ]; then
+   wait_for_files "$p-lsof"
    cmd_ok \
       "grep -q 'COMMAND[ ]\+PID[ ]\+USER' $p-lsof" \
       "lsof"
