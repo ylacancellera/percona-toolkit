@@ -77,8 +77,6 @@ cmd_ok \
 
 if [ "$(which lsof 2>/dev/null)" ]; then
    wait_for_files "$p-lsof"
-   cat /tmp/lsof_test
-   cat /tmp/mysql_pid_lsof
    cmd_ok \
       "grep -q 'COMMAND[ ]\+PID[ ]\+USER' $p-lsof" \
       "lsof"
