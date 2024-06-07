@@ -39,7 +39,7 @@ _pidof() {
 _lsof() {
    local pid="$1"
    if ! lsof -p $pid 2>/dev/null; then
-      /bin/ls -l /proc/$pid/fd 2>/dev/null
+      /bin/ls -l /proc/$pid/fd 2>/tmp/lsof_test #/dev/null
    fi
 }
 

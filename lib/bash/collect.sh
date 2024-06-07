@@ -122,7 +122,10 @@ collect_mysql_data_one() {
    # Get pidof mysqld.
    if [ ! "$OPT_MYSQL_ONLY" ]; then
       port=$($CMD_MYSQL $EXT_ARGV -ss -e 'SELECT @@port')
-      mysqld_pid=$(lsof -i ":${port}" | grep -i listen | cut -f 3 -d" ")
+      mysqld_pid=$(lsof -i ":${port}" | grep -i listen | tr -s ' ' | cut -f 2 -d" ")
+      echo "MySQL PID: $mysqld_pid" > /tmp/mysql_pid_lsof
+      lsof_pid=$(lsof -i ":${port}")
+      echo "lsof for MySQl PID: $lsof_pid" >> /tmp/mysql_pid_lsof
    fi
 
    # Get memory allocation info before anything else.
