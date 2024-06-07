@@ -155,11 +155,11 @@ get_system(){
 }
 
 install_go() {
-    wget --no-check-certificate http://jenkins.percona.com/downloads/golang/go1.9.4.linux-amd64.tar.gz -O /tmp/golang1.9.4.tar.gz
-    tar --transform=s,go,go1.9, -zxf /tmp/golang1.9.4.tar.gz
-    rm -rf /usr/local/go /usr/local/go1.8 /usr/local/go1.9
-    mv go1.9 /usr/local/
-    ln -s /usr/local/go1.9 /usr/local/go
+    #wget --no-check-certificate http://jenkins.percona.com/downloads/golang/go1.9.4.linux-amd64.tar.gz -O /tmp/golang1.9.4.tar.gz
+    #tar --transform=s,go,go1.9, -zxf /tmp/golang1.9.4.tar.gz
+    #rm -rf /usr/local/go /usr/local/go1.8 /usr/local/go1.9
+    #mv go1.9 /usr/local/
+    #ln -s /usr/local/go1.9 /usr/local/go
     GO_VERSION=1.21.5
     wget --progress=dot:giga https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz -O /tmp/golang.tar.gz
     tar -C /usr/local -xzf /tmp/golang.tar.gz
