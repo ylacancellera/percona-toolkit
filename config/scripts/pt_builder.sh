@@ -160,7 +160,7 @@ install_go() {
     #rm -rf /usr/local/go /usr/local/go1.8 /usr/local/go1.9
     #mv go1.9 /usr/local/
     #ln -s /usr/local/go1.9 /usr/local/go
-    GO_VERSION=1.21.5
+    GO_VERSION=1.22.4
     wget --progress=dot:giga https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz -O /tmp/golang.tar.gz
     tar -C /usr/local -xzf /tmp/golang.tar.gz
     update-alternatives --install "/usr/bin/go" "go" "/usr/local/go/bin/go" 0
