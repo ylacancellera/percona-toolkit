@@ -1,7 +1,7 @@
 Percona Toolkit
 ***************
 
-v3.6.0 released 2024-06-10
+v3.6.0 released 2024-06-12
 ==============================
 
 New Features
@@ -16,13 +16,12 @@ Improvements
 
 * `PR-160`: Added support for operf if present, and if CMD_OPCONTROL is not set (Thanks to Fernando Ipar for the contribution)
 * `PR-140`: Add CPU cache configuration info to pt-summary (Thanks to Alexey Kopytov for the contribution)
-* `PR-765`: pt-galera-log-explainer: improvements from feedbacks (Thanks Yoann La Cancellera for the contribution)
-* `PR-772`: pt-galera-log-explainer: add custom regexes parameter (Thanks Yoann La Cancellera for the contribution)
+* `PR-765`: pt-galera-log-explainer: improvements from feedbacks (Thanks to Yoann La Cancellera for the contribution)
+* `PR-772`: pt-galera-log-explainer: add custom regexes parameter (Thanks to Yoann La Cancellera for the contribution)
 * :jirabug:`PT-2100`: Fixed Wide character error (Thanks to Satoshi MITANI for the contribution)
-* :jirabug:`PT-2307`: Include last inactive check messages on pt-galera-log-explainer (Thanks Yoann La Cancellera for the contribution)
-* :jirabug:`PT-2233`: pt-k8s-debug-collector needs psql in the host node
-(Thanks to Jobin Augustine for the contribution)
-* :jirabug:`PT-2301`: pt-galera-log-explainer: whois redesign (Thanks Yoann La Cancellera for the contribution)
+* :jirabug:`PT-2307`: Include last inactive check messages on pt-galera-log-explainer (Thanks to Yoann La Cancellera for the contribution)
+* :jirabug:`PT-2233`: pt-k8s-debug-collector needs psql in the host node (Thanks to Jobin Augustine for the contribution)
+* :jirabug:`PT-2301`: pt-galera-log-explainer: whois redesign (Thanks to Yoann La Cancellera for the contribution)
 * :jirabug:`PT-2190`: pt-show-grants should use print_identified_with_as_hex
 * :jirabug:`PT-2247`: pt-show-grants does not CREATE USER (Thanks to Marco Tusa for the contribution)
 * :jirabug:`PT-2299`: Collect openssl x509 certificate information for each secret
@@ -30,7 +29,8 @@ Improvements
 Bugs Fixed
 ------------
 
-* :jirabug:`PT-2298`: pt-galera-log-explainer: superfluous lines on conflicts (Thanks Yoann La Cancellera for the contribution)
+* :jirabug:`PR-777`: [Snyk] Fix for 12 vulnerabilities (Thanks to Nurlan Moldomurov for the contribution)
+* :jirabug:`PT-2298`: pt-galera-log-explainer: superfluous lines on conflicts (Thanks to Yoann La Cancellera for the contribution)
 * :jirabug:`PT-2295`: Fix tests on distributions
 * :jirabug:`PT-2275`: "System Summary" graph breaks when perl is not available (OS summary dashboard)
 * :jirabug:`PT-2284`: pt-kill 3.5.5: "Wide character in printf at /usr/bin/pt-kill line 7553."
@@ -40,12 +40,12 @@ Bugs Fixed
 * :jirabug:`PT-2119`: pt-osc aborts in 8.0.15 even if no FK exists #792
 * :jirabug:`PT-1194`: LP #1266896: pt-table-sync port problem
 * :jirabug:`PT-2217`: pt-mongodb-summary gives error with psmdb6.0
-* :jirabug:`PT-2231`: pt-osc + PTDEBUG=1 fails with Use of uninitialized value in concatenation (.) or string at ./pt-online-schema-change line 4309.
+* :jirabug:`PT-2231`: pt-osc + PTDEBUG=1 fails with Use of uninitialized value in concatenation (.) or string at ./pt-online-schema-change line 4309
 * :jirabug:`PT-2327`: pt-mysql-summary fails to connect if password has a single quote character
 * :jirabug:`PT-2302`: pt-k8s-debug-collector cannot pass properly to pt-mysql-summary pxc root password with special characters
 * :jirabug:`PT-2309`: pt-table-sync hits an error when the primary key is uuid binary
 * :jirabug:`PT-2154`: Fix tests for pt-table-sync
-
+* :jirabug:`PT-2345`: CVE reported in Percona Toolkit 3.5.7 related to golang.org/x/net/http2 (Thanks to Kushal Haldar for reporting this issue)
 
 v3.5.7 released 2023-12-23
 ==============================
