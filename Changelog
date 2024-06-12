@@ -1,12 +1,45 @@
 Changelog for Percona Toolkit
 
+v3.6.0 released 2024-06-12
+
+* Feature PR-754: Port improved pt-pmp (Thanks to Alexey Stroganov for the contribution)
+* Feature PT-1751: adds --where param to pt-online-schema-change
+* Feature PT-1717: resume pt-online-schema-change if interrupted
+* Improvement PT-2100: fixed Wide character error (Thanks to Satoshi MITANI for the contribution)
+* Improvement PT-2307: Include last inactive check messages on pt-galera-log-explainer (Thanks Yoann La Cancellera for the contribution)
+* Improvement PR-160:  added support for operf if present, and if CMD_OPCONTROL is not set (Thanks to Fernando Ipar for the contribution)
+* Improvement PR-140:  Add CPU cache configuration info to pt-summary (Thanks to Alexey Kopytov for the contribution)
+* Improvement PR-765:  pt-galera-log-explainer: improvements from feedbacks (Thanks Yoann La Cancellera for the contribution)
+* Improvement PT-2233: pt-k8s-debug-collector needs psql in the host node
+(Thanks to Jobin Augustine for the contribution)
+* Improvement PR-772:  pt-galera-log-explainer: add custom regexes parameter (Thanks Yoann La Cancellera for the contribution)
+* Improvement PT-2301: pt-galera-log-explainer: whois redesign (Thanks Yoann La Cancellera for the contribution)
+* Improvement PT-2190: pt-show-grants should use print_identified_with_as_hex
+* Improvement PT-2247: pt-show-grants does not CREATE USER (Thanks to Marco Tusa for the contribution)
+* Improvement PT-2299: collect openssl x509 certificate information for each secret
+* Fixed bug PT-2298: pt-galera-log-explainer: superfluous lines on conflicts (Thanks Yoann La Cancellera for the contribution)
+* Fixed bug PT-2295: Fix tests on distributions
+* Fixed bug PT-2275: "System Summary" graph breaks when perl is not available (OS summary dashboard)
+* Fixed bug PT-2284: pt-kill 3.5.5: "Wide character in printf at /usr/bin/pt-kill line 7553."
+* Fixed bug PT-2264: pt-query-digest Pipeline process 11 (--output slowlog) caused an error: Wide character
+* Fixed bug PT-2313: pt-diskstat fails with new kernels again
+* Fixed bug PT-1911: pt-online-schema-change can't use options port
+* Fixed bug PT-2119: pt-osc aborts in 8.0.15 even if no FK exists #792
+* Fixed bug PT-1194: LP #1266896: pt-table-sync port problem
+* Fixed bug PT-2217: pt-mongodb-summary gives error with psmdb6.0
+* Fixed bug PT-2231: pt-osc + PTDEBUG=1 fails with Use of uninitialized value in concatenation (.) or string at ./pt-online-schema-change line 4309.
+* Fixed bug PT-2327: pt-mysql-summary fails to connect if password has a single quote character
+* Fixed bug PT-2302: pt-k8s-debug-collector cannot pass properly to pt-mysql-summary pxc root password with special characters
+* Fixed bug PT-2309: pt-table-sync hits an error when the primary key is uuid binary
+* Fixed bug PT-2154: Fix tests for pt-table-sync
+
 v3.5.7 released 2023-12-23
 
 This is a HotFix release that does not have any public bug fix
 
 v3.5.6 released 2023-12-21
 
-* Feature PR-669: Add pt-galera-log-explainer
+* Feature PR-669: Add pt-galera-log-explainer (Thanks Yoann La Cancellera for the contribution)
 * Improvement PT-1860: pt-osc case sensitivity issue (Thanks to Ivan Kruglov for the contribution)
 * Improvement PR-388: Check undefined skip check slave lag schema change (Thanks to Chrys Swingler for the contribution)
 * Improvement PR-471: Support adding explain output for slow query in JSON report as well (Thanks to Ayush Goyal for the contribution)

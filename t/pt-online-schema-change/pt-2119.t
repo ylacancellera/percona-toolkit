@@ -27,7 +27,7 @@ if ( !$master_dbh ) {
 
 my $vp = VersionParser->new($master_dbh);
 
-if ( $vp->cmp('8.0') > -1 && ($vp->cmp('8.0.14') < 0 || $vp->cmp('8.0.17') >= 0 || $vp->flavor() =~ m/maria/i) ) {
+if ( $vp->cmp('8.0.14') < 0 || $vp->cmp('8.0.17') >= 0 || $vp->flavor() =~ m/maria/i ) {
    plan skip_all => 'Test requires versions between 8.0.14 and 8.0.17';
 }
 

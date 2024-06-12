@@ -61,6 +61,7 @@ SKIP: {
          ( $sandbox_version ge '8.0' ? "t/pt-query-digest/samples/slow007_explain_json_1-80.txt"
          : "t/pt-query-digest/samples/slow007_explain_json_1-57.txt"),
          post_pipe => 'jq -S .',
+         sed => [ q/'s!"name": ".*slow007.txt"!"name": "slow007.txt"!'/ ],
       ),
       'Analysis for slow007 with --explain and --output=json, no rows',
    );
@@ -96,6 +97,7 @@ SKIP: {
          ( $sandbox_version ge '8.0' ? "t/pt-query-digest/samples/slow007_explain_json_2-80.txt"
          : "t/pt-query-digest/samples/slow007_explain_json_2-57.txt"),
          post_pipe => 'jq -S .',
+         sed => [ q/'s!"name": ".*slow007.txt"!"name": "slow007.txt"!'/ ],
       ),
       'Analysis for slow007 with --explain and --output=json',
    );

@@ -174,10 +174,15 @@ diag(`mv $cnf.bak $cnf`);
 diag(`/tmp/12347/stop >/dev/null`);
 diag(`/tmp/12347/start >/dev/null`);
 
-diag("Dropping test database");
+diag("Dropping test databases");
+$master_dbh->do("DROP DATABASE test_recursion_method");
 $master_dbh->do("DROP DATABASE IF EXISTS test");
 $sb->wait_for_slaves();
 
 $sb->wipe_clean($master_dbh);
 ok($sb->ok(), "Sandbox servers") or BAIL_OUT(__FILE__ . " broke the sandbox");
+
+diag(`/tmp/12345/stop >/dev/null`);
+diag(`/tmp/12345/start >/dev/null`);
+
 done_testing;

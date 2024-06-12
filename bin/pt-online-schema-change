@@ -56,7 +56,7 @@ BEGIN {
 {
 package Percona::Toolkit;
 
-our $VERSION = '3.5.7';
+our $VERSION = '3.6.0';
 
 use strict;
 use warnings FATAL => 'all';
@@ -7215,7 +7215,10 @@ sub _split_url {
          or croak(qq/Could not binmode() socket: '$!'/);
 
        if ( $scheme eq 'https') {
-           IO::Socket::SSL->start_SSL($self->{fh});
+           IO::Socket::SSL->start_SSL(
+              $self->{fh},
+              SSL_verifycn_name => $host,
+           );
            ref($self->{fh}) eq 'IO::Socket::SSL'
                or die(qq/SSL connection failed for $host\n/);
            if ( $self->{fh}->can("verify_hostname") ) {
@@ -8919,7 +8922,7 @@ sub main {
       );
       PTDEBUG && _d($insert_sth);
       $insert_sth->execute($db, $tbl, $o->get('alter'), $json_str);
-      $job_id = $insert_sth->last_insert_id();
+      $job_id = @{$cxn->dbh()->selectall_arrayref('SELECT LAST_INSERT_ID() AS job_id')}[0]->[0];
       print ts("Job ${job_id} started.\n");
       $hist_sth = $cxn->dbh()->prepare(
          "UPDATE ${hist_table} SET lower_boundary = ?, upper_boundary = ? "
@@ -10805,8 +10808,11 @@ sub create_history_table {
       $tbl_sql_minimized =~ s/`//g;
       $tbl_sql_minimized =~ s/^\s+//g;
       $tbl_sql_minimized =~ s/engine\=[\w\d_= ]+$//i;
+      $tbl_sql_minimized =~ s/int\(\d+\)/int/i;
 
       if ( lc($sql_minimized) ne lc($tbl_sql_minimized) ) {
+         PTDEBUG && _d("Expected history table structure:\n" , lc($sql_minimized));
+         PTDEBUG && _d("Actual history table structure:\n", lc($tbl_sql_minimized));
          die "--history table $tbl exists but does not have expected structure.\n"
             . "Explected structure:\n$sql \n"
             . "User-defined table:\n$tbl_sql\n"
@@ -14047,6 +14053,6 @@ Place, Suite 330, Boston, MA  02111-1307  USA.
 
 =head1 VERSION
 
-pt-online-schema-change 3.5.7
+pt-online-schema-change 3.6.0
 
 =cut

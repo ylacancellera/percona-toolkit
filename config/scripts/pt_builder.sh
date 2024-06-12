@@ -155,12 +155,12 @@ get_system(){
 }
 
 install_go() {
-    wget --no-check-certificate http://jenkins.percona.com/downloads/golang/go1.9.4.linux-amd64.tar.gz -O /tmp/golang1.9.4.tar.gz
-    tar --transform=s,go,go1.9, -zxf /tmp/golang1.9.4.tar.gz
-    rm -rf /usr/local/go /usr/local/go1.8 /usr/local/go1.9
-    mv go1.9 /usr/local/
-    ln -s /usr/local/go1.9 /usr/local/go
-    GO_VERSION=1.21.5
+    #wget --no-check-certificate http://jenkins.percona.com/downloads/golang/go1.9.4.linux-amd64.tar.gz -O /tmp/golang1.9.4.tar.gz
+    #tar --transform=s,go,go1.9, -zxf /tmp/golang1.9.4.tar.gz
+    #rm -rf /usr/local/go /usr/local/go1.8 /usr/local/go1.9
+    #mv go1.9 /usr/local/
+    #ln -s /usr/local/go1.9 /usr/local/go
+    GO_VERSION=1.22.4
     wget --progress=dot:giga https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz -O /tmp/golang.tar.gz
     tar -C /usr/local -xzf /tmp/golang.tar.gz
     update-alternatives --install "/usr/bin/go" "go" "/usr/local/go/bin/go" 0
@@ -233,7 +233,7 @@ install_deps() {
               sleep 1
           done
       fi
-      if [ $DEBIAN_VERSION = bionic -o $DEBIAN_VERSION = focal -o $DEBIAN_VERSION = bullseye -o $DEBIAN_VERSION = buster -o $DEBIAN_VERSION = bookworm -o $DEBIAN_VERSION = jammy -o $DEBIAN_VERSION = xenial ]; then
+      if [ $DEBIAN_VERSION = bionic -o $DEBIAN_VERSION = focal -o $DEBIAN_VERSION = bullseye -o $DEBIAN_VERSION = buster -o $DEBIAN_VERSION = bookworm -o $DEBIAN_VERSION = jammy -o $DEBIAN_VERSION = xenial -o $DEBIAN_VERSION = noble ]; then
           until apt-get update; do
               echo "waiting"
               sleep 1
@@ -515,7 +515,7 @@ build_deb(){
     mkdir -p $WORKDIR/deb
     cp $WORKDIR/*.*deb $WORKDIR/deb
     cp $WORKDIR/*.*deb $CURDIR/deb
-    if [ "x$DEBIAN_VERSION" = "xjammy" ]; then
+    if [ "x$DEBIAN_VERSION" = "xjammy" -o "x$DEBIAN_VERSION" = "xnoble" ]; then
         for dir in $WORKDIR/deb $CURDIR/deb; do
 	    cd $dir
             COMP=gzip

@@ -35,6 +35,10 @@ my $master2_dbh = $sb->get_dbh_for('master2');
 $master1_dbh->do("CREATE DATABASE test");
 $sb->load_file("master1", "t/pt-table-sync/samples/before.sql");
 $sb->wait_for_slaves();
+$sb->wait_for_slaves(
+                     master => 'master1',
+                     slave => 'master2',
+                  );
 
 # Make master2 different from master1.  So master2 has the _correct_ data,
 # and the sync below will make master1 have that data too.
