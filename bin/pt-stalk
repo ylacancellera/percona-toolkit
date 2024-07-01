@@ -878,7 +878,7 @@ collect() {
 collect_mysql_data_one() {
    if [ ! "$OPT_MYSQL_ONLY" ]; then
       port=$($CMD_MYSQL $EXT_ARGV -ss -e 'SELECT @@port')
-      mysqld_pid=$(lsof -i ":${port}" | grep -i listen | cut -f 3 -d" ")
+      mysqld_pid=$(lsof -i ":${port}" | grep -i listen | tr -s ' ' | cut -f 2 -d" ")
    fi
 
    if [ "$CMD_PMAP" -a "$mysqld_pid" ]; then
