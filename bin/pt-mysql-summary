@@ -2129,7 +2129,7 @@ section_innodb () {
    name_val "Commit Concurrency"  \
             "$(get_var innodb_commit_concurrency "$variables_file")"
    name_val "Txn Isolation Level" \
-            "$(get_var tx_isolation "$variables_file")"
+            "$(get_var transaction_isolation "$variables_file")"
    name_val "Adaptive Flushing"   \
             "$(get_var innodb_adaptive_flushing "$variables_file")"
    name_val "Adaptive Checkpoint" \
