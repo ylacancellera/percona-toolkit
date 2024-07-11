@@ -1018,13 +1018,9 @@ section_innodb () {
    # dynamically allocate variable name - transaction_isolation
    local mysql_version=$(get_var version "$variables_file" | awk -F'-' '{print $1}')
    local transaction_isolation_var="tx_isolation"
-   version_greater_equal() { # Function to compare versions
-      [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$2" ]
-   }
-   if version_greater_equal "$mysql_version" "5.7.20"; then # true if version >= 5.7.20
+   if [ "$mysql_version" '>' "5.7.19" ]; then # true if version >= 5.7.20
          transaction_isolation_var="transaction_isolation"
    fi
-
 
    name_val "Buffer Pool Fill"   "$(fuzzy_pct ${bp_fill} ${bp_pags})"
    name_val "Buffer Pool Dirty"  "$(fuzzy_pct ${bp_dirt} ${bp_pags})"
