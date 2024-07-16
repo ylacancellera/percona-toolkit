@@ -1016,10 +1016,9 @@ section_innodb () {
    local bp_fill=$((${bp_pags} - ${bp_free}))
 
    # dynamically allocate variable name - transaction_isolation
-   local mysql_version=$(get_var version "$variables_file" | awk -F'-' '{print $1}')
-   local transaction_isolation_var="tx_isolation"
-   if [ "$mysql_version" '>' "5.7.19" ]; then # true if version >= 5.7.20
-         transaction_isolation_var="transaction_isolation"
+   local transaction_isolation_var="transaction_isolation"
+   if [ "$version" '<' "5.7.20" ]; then # false if version >= 5.7.20
+      transaction_isolation_var="tx_isolation"
    fi
 
    name_val "Buffer Pool Fill"   "$(fuzzy_pct ${bp_fill} ${bp_pags})"
