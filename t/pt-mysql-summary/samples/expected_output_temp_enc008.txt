@@ -259,7 +259,7 @@ Specify --databases or --all-databases to dump and summarize schemas
        Thread Concurrency | 0
       Concurrency Tickets | 5000
        Commit Concurrency | 0
-      Txn Isolation Level | 
+      Txn Isolation Level | REPEATABLE-READ
         Adaptive Flushing | ON
       Adaptive Checkpoint | 
            Checkpoint Age | 69k

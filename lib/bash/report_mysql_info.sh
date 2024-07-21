@@ -1014,6 +1014,13 @@ section_innodb () {
    local bp_free="$(get_var Innodb_buffer_pool_pages_free "$status_file")"
    local bp_dirt="$(get_var Innodb_buffer_pool_pages_dirty "$status_file")"
    local bp_fill=$((${bp_pags} - ${bp_free}))
+
+   # dynamically allocate variable name - transaction_isolation
+   local transaction_isolation_var="transaction_isolation"
+   if [ "$version" '<' "5.7.20" ]; then # false if version >= 5.7.20
+      transaction_isolation_var="tx_isolation"
+   fi
+
    name_val "Buffer Pool Fill"   "$(fuzzy_pct ${bp_fill} ${bp_pags})"
    name_val "Buffer Pool Dirty"  "$(fuzzy_pct ${bp_dirt} ${bp_pags})"
 
@@ -1048,7 +1055,7 @@ section_innodb () {
    name_val "Commit Concurrency"  \
             "$(get_var innodb_commit_concurrency "$variables_file")"
    name_val "Txn Isolation Level" \
-            "$(get_var tx_isolation "$variables_file")"
+            "$(get_var $transaction_isolation_var "$variables_file")"
    name_val "Adaptive Flushing"   \
             "$(get_var innodb_adaptive_flushing "$variables_file")"
    name_val "Adaptive Checkpoint" \
