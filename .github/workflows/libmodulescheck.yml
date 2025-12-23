@@ -1,0 +1,26 @@
+name: libmodulescheck 
+
+on:
+  pull_request:
+    branches: [ "3.x" ]
+
+
+jobs:
+
+  libmodulescheck:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Dump GitHub context
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
+    - name: run util/check_libmodules_updated 
+      run: ./util/check_libmodules_updated
+      env:
+        INPUT_HEAD_REF: '${{ github.event.pull_request.head.sha  }}'
+        INPUT_BASE_REF: '${{ github.event.pull_request.base.sha  }}'

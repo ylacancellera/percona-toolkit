@@ -1,0 +1,62 @@
+#!/bin/bash
+
+set -xe
+
+function grep_line_number() {
+	grep -m 1 -n "$1" $2 | cut -d ':' -f1
+}
+
+function are_changes_located_in_binary_package() {
+	pt_package_line_number=$(grep_line_number "package pt_" $file)
+	min_changed_line_number=$(git diff -U0 $INPUT_HEAD_REF $INPUT_BASE_REF $file | grep "^@@" | grep -oe "-[0-9]\+,\?" | grep -o "[0-9]\+" | sort -n | head -n 1 )
+	echo "$file, $min_changed_line_number, $pt_package_line_number"	
+	if [ $min_changed_line_number -lt $pt_package_line_number ]; then
+		return 1
+	fi
+	return 0
+}
+
+function are_changes_located_in_lib() {
+	changed_line_numbers=$(git diff -U0 $INPUT_HEAD_REF $INPUT_BASE_REF $file | grep "^@@" | grep -oe "-[0-9]\+,\?" | grep -o "[0-9]\+" | sort -n)	
+
+	for lib_file in $lib_files; do
+		package=$(grep "^package" $lib_file | cut -d ' ' -f2 | sed -e 's/;//')
+		package_line_number_in_bin=$(grep_line_number "^package $package" $file)
+		end_package_line_number_in_bin=$(grep_line_number "# End $package package" $file)
+
+		found=0
+		for line_number in $changed_line_numbers; do
+			if [[ $line_number -gt $package_line_number_in_bin && $line_number -lt $end_package_line_number_in_bin ]]; then
+				found=1	
+			fi
+		done
+		if [ $found -eq 0 ]; then
+			return 1
+		fi
+	done
+	return 0
+}
+
+echo "input: $INPUT_HEAD_REF $INPUT_BASE_REF"
+git diff --name-only $INPUT_HEAD_REF $INPUT_BASE_REF 
+bin_files=$(git diff --name-only $INPUT_HEAD_REF $INPUT_BASE_REF | grep -P "^bin") 
+if [ -z "$bin_files" ]; then
+	echo "no perl changes"
+	exit 0
+fi
+lib_files=$(git diff --name-only $INPUT_HEAD_REF $INPUT_BASE_REF | grep -P "^lib" || echo "") 
+
+for file in $bin_files; do
+	
+	if ! are_changes_located_in_binary_package; then
+		if [ -z "$lib_files" ]; then
+			exit 1
+		fi
+	fi
+	if [ -n "$lib_files" ]; then
+		are_changes_located_in_lib
+	fi
+
+done
+
+

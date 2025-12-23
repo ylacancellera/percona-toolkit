@@ -63,7 +63,6 @@ sub new {
    foreach my $opt ( @{$args{opts}} ) {
       if ( !$opt->{key} || !$opt->{desc} ) {
          die "Invalid DSN option: ", Dumper($opt);
-      }
       PTDEBUG && _d('DSN option:',
          join(', ',
             map { "$_=" . (defined $opt->{$_} ? ($opt->{$_} || '') : 'undef') }
