@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -xe
+
+echo "input: $INPUT_HEAD_REF $INPUT_BASE_REF"
+git diff --name-only $INPUT_HEAD_REF $INPUT_BASE_REF 
+perl_changes=$(git diff --name-only $INPUT_HEAD_REF $INPUT_BASE_REF | grep -P "(bin|lib)") 
+if [ -z "$perl_changes" ]; then
+	echo "no perl changes"
+	exit 0
+fi
+
+for file in $perl_changes; do
+	pt_package_line_number=$(grep -m 1 -n "package pt_" $file | cut -d ':' -f1)
+	min_changed_line_number=$(git diff -U0 $INPUT_HEAD_REF $INPUT_BASE_REF $file | grep "^@@" | grep -oe "-[0-9]\+,\?" | grep -o "[0-9]\+" | sort -n | head -n 1 )
+	echo "$file, $min_changed_line_number, $pt_package_line_number"	
+	if [ $min_changed_line_number -lt $pt_package_line_number ]; then
+		exit 1
+	fi
+done
+
+
