@@ -49,7 +49,6 @@ sub cmp {
       $n2 += 0; # convert to number
       if ($n1 == $n2) {
           # still tied?, fetch next
-          next;
       }
       else {
          # difference! return result
